@@ -1,11 +1,12 @@
 package newbank.server;
 
+import java.io.BufferedReader;
 import java.util.HashMap;
 
 public class NewBank {
 	
 	private static final NewBank bank = new NewBank();
-	private HashMap<String,Customer> customers;
+	private final HashMap<String,Customer> customers;
 	
 	private NewBank() {
 		customers = new HashMap<>();
@@ -31,9 +32,13 @@ public class NewBank {
 	}
 	
 	public synchronized CustomerID checkLogInDetails(String userName, String password) {
-		if(customers.containsKey(userName)) {
-			return new CustomerID(userName);
-		}
+		Authenticator authenticator = new Authenticator();
+
+		CustomerID customerID = authenticator.checkLoginDetails(userName, password);
+
+		if (customerID != null)
+			return customerID;
+
 		return null;
 	}
 
