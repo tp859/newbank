@@ -8,9 +8,9 @@ import java.net.Socket;
 
 public class NewBankClientHandler extends Thread{
 	
-	private NewBank bank;
-	private BufferedReader in;
-	private PrintWriter out;
+	private final NewBank bank;
+	private final BufferedReader in;
+	private final PrintWriter out;
 	
 	
 	public NewBankClientHandler(Socket s) throws IOException {
@@ -22,28 +22,15 @@ public class NewBankClientHandler extends Thread{
 	public void run() {
 		// keep getting requests from the client and processing them
 		try {
-			// ask for user name
-			out.println("Enter Username");
-			String userName = in.readLine();
-			// ask for password
-			out.println("Enter Password");
-			String password = in.readLine();
-			out.println("Checking Details...");
-			// authenticate user and get customer ID token from bank for use in subsequent requests
-			CustomerID customer = bank.checkLogInDetails(userName, password);
-			// if the user is authenticated then get requests from the user and process them 
-			if(customer != null) {
-				out.println("Log In Successful. What do you want to do?");
-				while(true) {
-					String request = in.readLine();
-					System.out.println("Request from " + customer.getKey());
-					String responce = bank.processRequest(customer, request);
-					out.println(responce);
-				}
+			CustomerID customer = getUserLogin();
+
+			while (customer == null){
+				out.println("Invalid details, try again.");
+				customer = getUserLogin();
 			}
-			else {
-				out.println("Log In Failed");
-			}
+
+			processInput(customer);
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -56,6 +43,32 @@ public class NewBankClientHandler extends Thread{
 				Thread.currentThread().interrupt();
 			}
 		}
+	}
+
+	private void processInput(CustomerID customer) throws IOException {
+		out.println("Log In Successful. What do you want to do?");
+		String request = "";
+
+		// Added this for now as while(true) was causing a warning
+		while(!request.equals("EXIT")) {
+			request = in.readLine();
+			System.out.println("Request from " + customer.getKey());
+			String response = bank.processRequest(customer, request);
+			out.println(response);
+		}
+	}
+
+	private CustomerID getUserLogin() throws IOException {
+		// ask for user name
+		out.println("Enter Username");
+		String userName = in.readLine();
+		// ask for password
+		out.println("Enter Password");
+		String password = in.readLine();
+		out.println("Checking Details...");
+		// authenticate user and get customer ID token from bank for use in subsequent requests
+		// if the user is authenticated then get requests from the user and process them
+		return bank.checkLogInDetails(userName, password);
 	}
 
 }
