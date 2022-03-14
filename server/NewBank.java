@@ -8,13 +8,8 @@ import static java.lang.System.exit;
 public class NewBank {
 
 	private static final NewBank bank = new NewBank();
-<<<<<<< FR3
-	private HashMap<String, Customer> customers;
-
-=======
 	private final HashMap<String,Customer> customers;
 	
->>>>>>> sprint1
 	private NewBank() {
 		customers = new HashMap<>();
 		addTestData();
@@ -40,11 +35,6 @@ public class NewBank {
 	}
 
 	public synchronized CustomerID checkLogInDetails(String userName, String password) {
-<<<<<<< FR3
-		if (customers.containsKey(userName)) {
-			return new CustomerID(userName);
-		}
-=======
 		Authenticator authenticator = new Authenticator();
 
 		CustomerID customerID = authenticator.checkLoginDetails(userName, password);
@@ -52,23 +42,11 @@ public class NewBank {
 		if (customerID != null)
 			return customerID;
 
->>>>>>> sprint1
 		return null;
 	}
 
 	// commands from the NewBank customer are processed in this method
 	public synchronized String processRequest(CustomerID customer, String request) {
-<<<<<<< FR3
-		String[] input = request.split(" ");
-		if (customers.containsKey(customer.getKey())) {
-			switch (input[0]) {
-				case "SHOWMYACCOUNTS":
-					return showMyAccounts(customer);
-				case "NEWACCOUNT":
-					return createNewAccount(customer, input[1], Double.parseDouble(input[2]));
-				default:
-					return "FAIL";
-=======
 		/*Splits input string and checks that the request is in a valid format*/
 		String [] splitRequest = request.split(" ");
 
@@ -84,7 +62,7 @@ public class NewBank {
 
 				case "NEWACCOUNT" :
 					if (!checkInteger(splitRequest[1])) {
-						result = createNewAccount(customer, splitRequest);
+						result = createNewAccount(customer, splitRequest[1]);
 					}
 					break;
 
@@ -113,7 +91,6 @@ public class NewBank {
 				default :
 					result = "Command in incorrect format. Try again.";
 
->>>>>>> sprint1
 			}
 			return result;
 		}
@@ -132,22 +109,18 @@ public class NewBank {
 	private String createNewAccount(CustomerID customer, String[] splitRequest) {
 		return ("Code for new Account here");
 	}
-<<<<<<< FR3
 
-=======
->>>>>>> sprint1
 	private String showMyAccounts(CustomerID customer) {
 		return (customers.get(customer.getKey())).accountsToString();
 	}
 
-<<<<<<< FR3
-	private String createNewAccount(CustomerID customer, String accountName, double openingBalance) {
-		if (openingBalance < 0) {
-			return "FAIL: account shall have a starting balance of greater than or equal to 0.00";
-		}
-		customers.get(customer.getKey()).addAccount(new Account(accountName, openingBalance));
+	private String createNewAccount(CustomerID customer, String accountName) {
+
+		customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+
 		return "SUCCESS";
-=======
+	}
+
 	/*Checks if a given string is an integer, and catches exceptions*/
 	private boolean checkInteger(String value){
 		try {
@@ -157,6 +130,5 @@ public class NewBank {
 		catch (NumberFormatException e){
 			return false;
 		}
->>>>>>> sprint1
 	}
 }
