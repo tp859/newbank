@@ -45,8 +45,6 @@ public class NewBank {
 		return null;
 	}
 
-	//Test Comment again
-
 	// commands from the NewBank customer are processed in this method
 	public synchronized String processRequest(CustomerID customer, String request) {
 		/*Splits input string and checks that the request is in a valid format*/
