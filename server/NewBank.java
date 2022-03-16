@@ -81,6 +81,14 @@ public class NewBank {
 						}
 					}
 					break;
+				case "DEPOSIT" :
+					// Format "DEPOSIT <amount> <accountName>
+					if (splitRequest.length == 3){
+						if(checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+							result = deposit(customer, splitRequest);
+						}
+					}
+					break;
 
 				case "END":
 					if (splitRequest.length == 1) {
@@ -98,16 +106,31 @@ public class NewBank {
 		return "FAIL. TRY AGAIN.";
 	}
 
+	private String deposit(CustomerID customer, String[] splitRequest) {
+
+		double deposit = Double.parseDouble(splitRequest[1]); // No need to check this as format checked when input read
+		// Check not trying to withdraw using deposit command
+		if (deposit < 0) {
+			return ("FAIL: Deposit amount must be a positive number");
+		}
+
+		try { // Try/catch needed in case findAccount throws exception
+			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
+			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
+			String receipt = "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
+			return (receipt);
+		} catch (NullPointerException e) {
+			// No account found with that name
+			return ("FAIL: No account found with that name.");
+		}
+	}
+
 	private String payOther(CustomerID customer, String[] splitRequest) {
 		return ("Code for payments here");
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
 		return ("Code for transfers here");
-	}
-
-	private String createNewAccount(CustomerID customer, String[] splitRequest) {
-		return ("Code for new Account here");
 	}
 
 	private String showMyAccounts(CustomerID customer) {
@@ -125,6 +148,17 @@ public class NewBank {
 	private boolean checkInteger(String value){
 		try {
 			int intValue = Integer.parseInt(value);
+			return true;
+		}
+		catch (NumberFormatException e){
+			return false;
+		}
+	}
+
+	/*Checks if a given string is a double, and catches exceptions*/
+	private boolean checkDouble(String value){
+		try {
+			double doubleVal = Double.parseDouble(value);
 			return true;
 		}
 		catch (NumberFormatException e){
