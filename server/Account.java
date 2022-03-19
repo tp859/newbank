@@ -28,4 +28,18 @@ public class Account {
 		this.balance += sum;
 	}
 
+
+	public boolean checkBalance(double amount){
+		if (amount > this.balance){
+			return false;
+		}
+		return true;
+	}
+
+	public void removeBalance(double amount){
+		this.balance -= amount;
+	}
+
+
+
 }
