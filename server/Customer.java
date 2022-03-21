@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Customer {
 	
-	private ArrayList<Account> accounts;
+	private final ArrayList<Account> accounts;
 	
 	public Customer() {
 		accounts = new ArrayList<>();
@@ -28,6 +28,6 @@ public class Customer {
 				return account;
 			}
 		}
-		throw new NullPointerException("No account found with this name");
+		throw new NullPointerException("No account found with name \"" + name + "\"");
 	}
 }

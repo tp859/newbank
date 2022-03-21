@@ -2,7 +2,7 @@ package newbank.server;
 
 public class Account {
 	
-	private String accountName;
+	private final String accountName;
 	private double balance;
 
 	public Account(String accountName, double openingBalance) {
@@ -30,14 +30,7 @@ public class Account {
 
 
 	public boolean checkBalance(double amount){
-		if (amount > this.balance){
-			return false;
-		}
-		return true;
-	}
-
-	public void removeBalance(double amount){
-		this.balance -= amount;
+		return !(amount > this.balance);
 	}
 
 
