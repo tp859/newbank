@@ -7,162 +7,183 @@ import static java.lang.System.exit;
 
 public class NewBank {
 
-	private static final NewBank bank = new NewBank();
-	private final HashMap<String,Customer> customers;
-	
-	private NewBank() {
-		customers = new HashMap<>();
-		addTestData();
-	}
+    private static final NewBank bank = new NewBank();
+    private final HashMap<String, Customer> customers;
 
-	private void addTestData() {
-		Customer bhagy = new Customer();
-		bhagy.addAccount(new Account("Main", 1000.0));
-		customers.put("Bhagy", bhagy);
+    private NewBank() {
+        customers = new HashMap<>();
+        addTestData();
+    }
 
-		Customer christina = new Customer();
-		christina.addAccount(new Account("Savings", 1500.0));
-		customers.put("Christina", christina);
+    private void addTestData() {
+        Customer bhagy = new Customer();
+        bhagy.addAccount(new Account("Main", 1000.0));
+        customers.put("Bhagy", bhagy);
 
-		Customer john = new Customer();
-		john.addAccount(new Account("Checking", 250.0));
-		customers.put("John", john);
-	}
+        Customer christina = new Customer();
+        christina.addAccount(new Account("Savings", 1500.0));
+        customers.put("Christina", christina);
 
-	public static NewBank getBank() {
+        Customer john = new Customer();
+        john.addAccount(new Account("Checking", 250.0));
+        customers.put("John", john);
+    }
 
-		return bank;
-	}
+    public static NewBank getBank() {
 
-	public synchronized CustomerID checkLogInDetails(String userName, String password) {
-		Authenticator authenticator = new Authenticator();
+        return bank;
+    }
 
-		CustomerID customerID = authenticator.checkLoginDetails(userName, password);
+    public synchronized CustomerID checkLogInDetails(String userName, String password) {
+        Authenticator authenticator = new Authenticator();
 
-		if (customerID != null)
-			return customerID;
+        return authenticator.checkLoginDetails(userName, password);
+    }
 
-		return null;
-	}
+    // commands from the NewBank customer are processed in this method
+    public synchronized String processRequest(CustomerID customer, String request) {
+        /*Splits input string and checks that the request is in a valid format*/
+        String[] splitRequest = request.split(" ");
 
-	// commands from the NewBank customer are processed in this method
-	public synchronized String processRequest(CustomerID customer, String request) {
-		/*Splits input string and checks that the request is in a valid format*/
-		String [] splitRequest = request.split(" ");
+        /*If in valid format, checks the first word of the string to see which bit of code needs to be run*/
+        if (customers.containsKey(customer.getKey())) {
+            String result = "Command in incorrect format. Try again.";
+            switch (splitRequest[0]) {
+                case "SHOWMYACCOUNTS":
+                    if (splitRequest.length == 1) {
+                        result = showMyAccounts(customer);
+                    }
+                    break;
 
-		/*If in valid format, checks the first word of the string to see which bit of code needs to be run*/
-		if(customers.containsKey(customer.getKey())) {
-			String result = "Command in incorrect format. Try again.";
-			switch(splitRequest[0]) {
-				case "SHOWMYACCOUNTS" :
-					if (splitRequest.length == 1){
-						result = showMyAccounts(customer);
-					}
-					break;
+                case "NEWACCOUNT":
+                    if (splitRequest.length == 1) {
+                        return "FAIL: Input format must be: NEWACCOUNT <Name>";
+                    }
+                    if (!checkInteger(splitRequest[1])) {
+                        result = createNewAccount(customer, splitRequest[1]);
+                    }
+                    break;
 
-				case "NEWACCOUNT" :
-					if (!checkInteger(splitRequest[1])) {
-						result = createNewAccount(customer, splitRequest[1]);
-					}
-					break;
+                case "MOVE":
+                    if (splitRequest.length == 4) {
+                        if (checkDouble(splitRequest[1]) & !checkInteger(splitRequest[2]) & !checkInteger(splitRequest[3])) {
+                            result = transferAccounts(customer, splitRequest);
+                        }
+                    }
+                    break;
 
-				case "MOVE" :
-					if (splitRequest.length == 4){
-						if(checkInteger(splitRequest[1]) & !checkInteger(splitRequest[2]) & !checkInteger(splitRequest[3])) {
-							result = transferAccounts (customer, splitRequest);
-						}
-					}
-					break;
+                case "PAY":
+                    if (splitRequest.length == 3) {
+                        if (!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
+                            result = payOther(customer, splitRequest);
+                        }
+                    }
+                    break;
+                case "DEPOSIT":
+                    // Format "DEPOSIT <amount> <accountName>
+                    if (splitRequest.length == 3) {
+                        if (checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+                            result = deposit(customer, splitRequest);
+                        }
+                    }
+                    break;
 
-				case "PAY" :
-					if (splitRequest.length == 3){
-						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
-							result = payOther (customer, splitRequest);
-						}
-					}
-					break;
-				case "DEPOSIT" :
-					// Format "DEPOSIT <amount> <accountName>
-					if (splitRequest.length == 3){
-						if(checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
-							result = deposit(customer, splitRequest);
-						}
-					}
-					break;
+                case "END":
+                    if (splitRequest.length == 1) {
+                        result = "Code for exit goes here";
+                    }
+                    break;
 
-				case "END":
-					if (splitRequest.length == 1) {
-						result = "Code for exit goes here";
-					}
-					break;
+                default:
+                    result = "Command in incorrect format. Try again.";
 
-				default :
-					result = "Command in incorrect format. Try again.";
+            }
+            return result;
+        }
+        //The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
+        return "FAIL. TRY AGAIN.";
+    }
 
-			}
-			return result;
-		}
-		//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
-		return "FAIL. TRY AGAIN.";
-	}
+    private String deposit(CustomerID customer, String[] splitRequest) {
 
-	private String deposit(CustomerID customer, String[] splitRequest) {
+        double deposit = Double.parseDouble(splitRequest[1]); // No need to check this as format checked when input read
+        // Check not trying to withdraw using deposit command
+        if (deposit < 0) {
+            return ("FAIL: Amount must be greater than £0.00");
+        }
 
-		double deposit = Double.parseDouble(splitRequest[1]); // No need to check this as format checked when input read
-		// Check not trying to withdraw using deposit command
-		if (deposit < 0) {
-			return ("FAIL: Deposit amount must be a positive number");
-		}
+        try { // Try/catch needed in case findAccount throws exception
+            customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
+            String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
+            String receipt = "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
+            return (receipt);
+        } catch (NullPointerException e) {
+            // No account found with that name
+            return (e.getMessage());
+        }
+    }
 
-		try { // Try/catch needed in case findAccount throws exception
-			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
-			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
-			String receipt = "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
-			return (receipt);
-		} catch (NullPointerException e) {
-			// No account found with that name
-			return ("FAIL: No account found with that name.");
-		}
-	}
+    private String payOther(CustomerID customer, String[] splitRequest) {
+        return ("Code for payments here");
+    }
 
-	private String payOther(CustomerID customer, String[] splitRequest) {
-		return ("Code for payments here");
-	}
+    private String transferAccounts(CustomerID customer, String[] splitRequest) {
+        try {
 
-	private String transferAccounts(CustomerID customer, String[] splitRequest) {
-		return ("Code for transfers here");
-	}
+            double amount = Double.parseDouble(splitRequest[1]);
+            if (amount <= 0) {
+                return "FAIL: Amount must be greater than £0.00";
+            }
+            Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
+            Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
 
-	private String showMyAccounts(CustomerID customer) {
-		return (customers.get(customer.getKey())).accountsToString();
-	}
+            //check if the accounts are the same
+            if (fromAccount.equals(toAccount)) {
+                return "FAIL: accounts are the same.";
+            }
 
-	private String createNewAccount(CustomerID customer, String accountName) {
+            if (fromAccount.checkBalance(amount)) {
+                fromAccount.changeBalanceBy(-amount);
+                toAccount.changeBalanceBy(amount);
+                return "SUCCESS";
+            } else {
+                return "FAIL: Insufficient funds";
+            }
+        } catch (NullPointerException e) {
+            return (e.getMessage());
+        }
 
-		customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+    }
 
-		return "SUCCESS";
-	}
+    private String showMyAccounts(CustomerID customer) {
+        return (customers.get(customer.getKey())).accountsToString();
+    }
 
-	/*Checks if a given string is an integer, and catches exceptions*/
-	private boolean checkInteger(String value){
-		try {
-			int intValue = Integer.parseInt(value);
-			return true;
-		}
-		catch (NumberFormatException e){
-			return false;
-		}
-	}
+    private String createNewAccount(CustomerID customer, String accountName) {
 
-	/*Checks if a given string is a double, and catches exceptions*/
-	private boolean checkDouble(String value){
-		try {
-			double doubleVal = Double.parseDouble(value);
-			return true;
-		}
-		catch (NumberFormatException e){
-			return false;
-		}
-	}
+        customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+
+        return "SUCCESS";
+    }
+
+    /*Checks if a given string is an integer, and catches exceptions*/
+    private boolean checkInteger(String value) {
+        try {
+            int intValue = Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /*Checks if a given string is a double, and catches exceptions*/
+    private boolean checkDouble(String value) {
+        try {
+            double doubleVal = Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 }
+
