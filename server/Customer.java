@@ -11,11 +11,12 @@ public class Customer {
 	}
 	
 	public String accountsToString() {
-		String s = "";
+		StringBuilder s = new StringBuilder();
 		for(Account a : accounts) {
-			s += a.toString() + "\n";
+			s.append(a.toString()).append("\n");
 		}
-		return s;
+
+		return s.length() != 0 ? s.toString() : "No accounts exist for this user.";
 	}
 
 	public void addAccount(Account account) {
