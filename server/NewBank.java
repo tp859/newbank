@@ -153,7 +153,31 @@ public class NewBank {
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
-		return ("Code for transfers here");
+		try {
+
+			double amount = Double.parseDouble(splitRequest[1]);
+			if (amount <= 0) {
+				return "FAIL: Amount must be greater than £0.00";
+			}
+			Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
+			Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
+
+			//check if the accounts are the same
+			if (fromAccount.equals(toAccount)) {
+				return "FAIL: accounts are the same.";
+			}
+
+			if (fromAccount.checkBalance(amount)) {
+				fromAccount.changeBalanceBy(-amount);
+				toAccount.changeBalanceBy(amount);
+				return "SUCCESS";
+			} else {
+				return "FAIL: Insufficient funds";
+			}
+		} catch (NullPointerException e) {
+			return (e.getMessage());
+		}
+
 	}
 
 	private String showMyAccounts(CustomerID customer) {
