@@ -148,8 +148,30 @@ public class NewBank {
 		return "FAIL";
 	}
 
-	private String payOther(CustomerID customer, String[] splitRequest) {
-		return ("Code for payments here");
+	private String payOther(CustomerID fromCustomer,CustomerID toCustomer double amount, String fromAccount, String toAccount) {
+		try {
+			Customer fromCustomerDetails = customers.get(fromCustomer.getKey());
+			Account fromCustomerAccount = fromCustomerDetails.findAccount(fromAccount);
+			
+			
+			Customer toCustomerDetails = customers.get(toCustomer.getKey());
+			Account toCustomerAccount = toCustomerDetails.findAccount(toAccount);
+			
+			if (fromCustomerAccount.getBalance() >= amount) {
+				fromCustomerAccount.changeBalanceBy(-amount);
+				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", fromAccount, fromCustomerAccount.getBalance());
+			}
+					
+	
+				toCustomerAccount.changeBalanceBy(+amount);
+				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", toAccount, toCustomerAccount.getBalance());
+			}
+		}
+		catch (NullPointerException e) {
+			return ("FAIL: No account found with the name \"%s\"");
+		}
+
+		return "FAIL";
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
