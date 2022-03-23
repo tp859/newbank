@@ -38,7 +38,7 @@ public class NewBank {
 	public synchronized CustomerID checkLogInDetails(String userName, String password) {
 		Authenticator authenticator = new Authenticator();
 
-		return authenticator.checkLoginDetails(userName, password);
+        return authenticator.checkLoginDetails(userName, password);
 	}
 
 	// commands from the NewBank customer are processed in this method
@@ -86,7 +86,7 @@ public class NewBank {
 					}
 					break;
 
-				case "WITHDRAW" :
+                case "WITHDRAW" :
 					if (splitRequest.length == 3){
 						double amount = convertToDouble(splitRequest[1]);
 
@@ -131,7 +131,7 @@ public class NewBank {
 		}
 	}
 
-	private String withdraw(CustomerID customer, double amount, String account) {
+    private String withdraw(CustomerID customer, double amount, String account) {
 		try {
 			Customer customerDetails = customers.get(customer.getKey());
 			Account customerAccount = customerDetails.findAccount(account);
@@ -178,16 +178,15 @@ public class NewBank {
 		}
 	}
 
-	/*Checks if a given string is a double, and catches exceptions*/
-	private boolean checkDouble(String value){
-		try {
-			double doubleVal = Double.parseDouble(value);
-			return true;
-		}
-		catch (NumberFormatException e){
-			return false;
-		}
-	}
+    /*Checks if a given string is a double, and catches exceptions*/
+    private boolean checkDouble(String value) {
+        try {
+            double doubleVal = Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
 	/*Checks if a given string is a double, and catches exceptions*/
 	private double convertToDouble(String value){
