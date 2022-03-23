@@ -4,21 +4,31 @@ import java.util.ArrayList;
 
 public class Customer {
 	
-	private ArrayList<Account> accounts;
+	private final ArrayList<Account> accounts;
 	
 	public Customer() {
 		accounts = new ArrayList<>();
 	}
 	
 	public String accountsToString() {
-		String s = "";
+		StringBuilder s = new StringBuilder();
 		for(Account a : accounts) {
-			s += a.toString() + "\n";
+			s.append(a.toString()).append("\n");
 		}
-		return s;
+
+		return s.length() != 0 ? s.toString() : "No accounts exist for this user.";
 	}
 
 	public void addAccount(Account account) {
 		accounts.add(account);		
+	}
+
+	public Account findAccount(String name) throws NullPointerException {
+		for (Account account : accounts) {
+			if (account.getAccountName().equals(name)) {
+				return account;
+			}
+		}
+		throw new NullPointerException("No account found with name \"" + name + "\"");
 	}
 }

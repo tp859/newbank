@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.util.HashMap;
 
 import static java.lang.System.exit;
+import static java.lang.System.out;
 
 public class NewBank {
 
@@ -37,12 +38,7 @@ public class NewBank {
 	public synchronized CustomerID checkLogInDetails(String userName, String password) {
 		Authenticator authenticator = new Authenticator();
 
-		CustomerID customerID = authenticator.checkLoginDetails(userName, password);
-
-		if (customerID != null)
-			return customerID;
-
-		return null;
+        return authenticator.checkLoginDetails(userName, password);
 	}
 
 	// commands from the NewBank customer are processed in this method
@@ -81,6 +77,25 @@ public class NewBank {
 						}
 					}
 					break;
+				case "DEPOSIT" :
+					// Format "DEPOSIT <amount> <accountName>
+					if (splitRequest.length == 3){
+						if(checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+							result = deposit(customer, splitRequest);
+						}
+					}
+					break;
+
+                case "WITHDRAW" :
+					if (splitRequest.length == 3){
+						double amount = convertToDouble(splitRequest[1]);
+
+						if(amount != -1) {
+							result = withdraw(customer, amount, splitRequest[2]);
+						}
+					}
+					break;
+
 
 				case "END":
 					if (splitRequest.length == 1) {
@@ -98,16 +113,71 @@ public class NewBank {
 		return "FAIL. TRY AGAIN.";
 	}
 
+	private String deposit(CustomerID customer, String[] splitRequest) {
+
+		double deposit = Double.parseDouble(splitRequest[1]); // No need to check this as format checked when input read
+		// Check not trying to withdraw using deposit command
+		if (deposit < 0) {
+			return ("FAIL: Deposit amount must be a positive number");
+		}
+
+		try { // Try/catch needed in case findAccount throws exception
+			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
+			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
+			return "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
+		} catch (NullPointerException e) {
+			// No account found with that name
+			return ("FAIL: No account found with that name.");
+		}
+	}
+
+    private String withdraw(CustomerID customer, double amount, String account) {
+		try {
+			Customer customerDetails = customers.get(customer.getKey());
+			Account customerAccount = customerDetails.findAccount(account);
+
+			if (customerAccount.getBalance() >= amount) {
+				customerAccount.changeBalanceBy(-amount);
+				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", account, customerAccount.getBalance());
+			}
+		}
+		catch (NullPointerException e) {
+			return ("FAIL: No account found with the name \"%s\"");
+		}
+
+		return "FAIL";
+	}
+
 	private String payOther(CustomerID customer, String[] splitRequest) {
 		return ("Code for payments here");
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
-		return ("Code for transfers here");
-	}
+		try {
 
-	private String createNewAccount(CustomerID customer, String[] splitRequest) {
-		return ("Code for new Account here");
+			double amount = Double.parseDouble(splitRequest[1]);
+			if (amount <= 0) {
+				return "FAIL: Amount must be greater than £0.00";
+			}
+			Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
+			Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
+
+			//check if the accounts are the same
+			if (fromAccount.equals(toAccount)) {
+				return "FAIL: accounts are the same.";
+			}
+
+			if (fromAccount.checkBalance(amount)) {
+				fromAccount.changeBalanceBy(-amount);
+				toAccount.changeBalanceBy(amount);
+				return "SUCCESS";
+			} else {
+				return "FAIL: Insufficient funds";
+			}
+		} catch (NullPointerException e) {
+			return (e.getMessage());
+		}
+
 	}
 
 	private String showMyAccounts(CustomerID customer) {
@@ -130,5 +200,27 @@ public class NewBank {
 		catch (NumberFormatException e){
 			return false;
 		}
+	}
+
+    /*Checks if a given string is a double, and catches exceptions*/
+    private boolean checkDouble(String value) {
+        try {
+            double doubleVal = Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+	/*Checks if a given string is a double, and catches exceptions*/
+	private double convertToDouble(String value){
+		try {
+			return Double.parseDouble(value);
+		}
+		catch (NumberFormatException e){
+			out.println("Value entered was not a number.");
+			return -1;
+		}
+
 	}
 }
