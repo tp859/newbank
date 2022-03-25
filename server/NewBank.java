@@ -73,7 +73,7 @@ public class NewBank {
 				case "PAY" :
 					if (splitRequest.length == 3){
 						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
-							result = payOther (CustomerID fromCustomer,CustomerID toCustomer,double amount,String splitRequest,String toAccount);
+							result = payOther (CustomerID fromCustomer,CustomerID toCustomer, double amount, String splitRequest, String toAccount);
 						}
 					}
 					break;
