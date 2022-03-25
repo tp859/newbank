@@ -72,10 +72,8 @@ public class NewBank {
 
 				case "PAY" :
 					if (splitRequest.length == 3){
-						double amount = convertToDouble(splitRequest[1]);
 						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
-							//result = payOther (customer,splitRequest);
-							result = payOther ( customer, customer, amount, " ", "");
+							result = payOther(fromCustomer,toCustomer,amount,fromAccount,toAccount);
 						}
 					}
 					break;
@@ -149,11 +147,7 @@ public class NewBank {
 
 		return "FAIL";
 	}
-/*	private String payOther (CustomerID customer, String[] splitRequest) {
-		// code for payOther
 
-		}
-*/
 	private String payOther(CustomerID fromCustomer,CustomerID toCustomer, double amount, String fromAccount, String toAccount) {
 		try {
 			Customer fromCustomerDetails = customers.get(fromCustomer.getKey());
