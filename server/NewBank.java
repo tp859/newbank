@@ -148,7 +148,7 @@ public class NewBank {
 		return "FAIL";
 	}
 
-	private String payOther(CustomerID fromCustomer,CustomerID toCustomer, double amount, String fromAccount, String toAccount) {
+	private String payOther(CustomerID fromCustomer,CustomerID toCustomer double amount, String fromAccount, String toAccount) {
 		try {
 			Customer fromCustomerDetails = customers.get(fromCustomer.getKey());
 			Account fromCustomerAccount = fromCustomerDetails.findAccount(fromAccount);
@@ -165,7 +165,7 @@ public class NewBank {
 	
 				toCustomerAccount.changeBalanceBy(+amount);
 				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", toAccount, toCustomerAccount.getBalance());
-			
+			}
 		}
 		catch (NullPointerException e) {
 			return ("FAIL: No account found with the name \"%s\"");
