@@ -57,14 +57,14 @@ public class NewBank {
 					break;
 
 				case "NEWACCOUNT" :
-					if (!checkInteger(splitRequest[1])) {
+					if (!ourCurrency.moneyValid(splitRequest[1])) {
 						result = createNewAccount(customer, splitRequest[1]);
 					}
 					break;
 
 				case "MOVE" :
 					if (splitRequest.length == 4){
-						if(checkInteger(splitRequest[1]) & !checkInteger(splitRequest[2]) & !checkInteger(splitRequest[3])) {
+						if(ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2]) & !ourCurrency.moneyValid(splitRequest[3])) {
 							result = transferAccounts (customer, splitRequest);
 						}
 					}
@@ -72,7 +72,7 @@ public class NewBank {
 
 				case "PAY" :
 					if (splitRequest.length == 3){
-						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
+						if(!ourCurrency.moneyValid(splitRequest[1]) & ourCurrency.moneyValid(splitRequest[2])) {
 							result = payOther (customer, splitRequest);
 						}
 					}
@@ -80,7 +80,7 @@ public class NewBank {
 				case "DEPOSIT" :
 					// Format "DEPOSIT <amount> <accountName>
 					if (splitRequest.length == 3){
-						if(checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+						if(ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2])) {
 							result = deposit(customer, splitRequest);
 						}
 					}
@@ -88,10 +88,11 @@ public class NewBank {
 
                 case "WITHDRAW" :
 					if (splitRequest.length == 3){
-						double amount = convertToDouble(splitRequest[1]);
-
-						if(amount != -1) {
-							result = withdraw(customer, amount, splitRequest[2]);
+						if (ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2])) {
+							int amount = ourCurrency.convertToPennies(splitRequest[1]);
+							if (amount > 0) {
+								result = withdraw(customer, amount, splitRequest[2]);
+							}
 						}
 					}
 					break;
@@ -114,31 +115,31 @@ public class NewBank {
 	}
 
 	private String deposit(CustomerID customer, String[] splitRequest) {
-
-		double deposit = Double.parseDouble(splitRequest[1]); // No need to check this as format checked when input read
+		int deposit = ourCurrency.convertToPennies(splitRequest[1]); // No need to check this as format checked when input read
 		// Check not trying to withdraw using deposit command
 		if (deposit < 0) {
 			return ("FAIL: Deposit amount must be a positive number");
 		}
-
 		try { // Try/catch needed in case findAccount throws exception
 			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
-			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
-			return "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
+			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).printBalance();
+			return "SUCCESS: The new balance for " + splitRequest[2] + " is " + newBalance;
 		} catch (NullPointerException e) {
 			// No account found with that name
 			return ("FAIL: No account found with that name.");
 		}
 	}
 
-    private String withdraw(CustomerID customer, double amount, String account) {
+    private String withdraw(CustomerID customer, int amount, String account) {
 		try {
 			Customer customerDetails = customers.get(customer.getKey());
 			Account customerAccount = customerDetails.findAccount(account);
 
 			if (customerAccount.getBalance() >= amount) {
+				System.out.println(customerAccount.getBalance());
 				customerAccount.changeBalanceBy(-amount);
-				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", account, customerAccount.getBalance());
+				System.out.println(customerAccount.getBalance());
+				return String.format("SUCCESS: The new balance for Account \"%s\" is %s", account, customerAccount.printBalance());
 			}
 		}
 		catch (NullPointerException e) {
@@ -154,8 +155,8 @@ public class NewBank {
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
 		try {
-
-			double amount = Double.parseDouble(splitRequest[1]);
+			int amount = ourCurrency.convertToPennies(splitRequest[1]);
+			System.out.println(amount);
 			if (amount <= 0) {
 				return "FAIL: Amount must be greater than £0.00";
 			}
