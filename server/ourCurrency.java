@@ -14,46 +14,55 @@ public class ourCurrency{
     }
 
     //Run assuming that decimalValid method has been run prior
-    public static int convertToPennies (String pounds){
-        int pennies = 0;
-        int count = 0;
-        //This finds where the decimal point is. This is assuming moneyValid method has been run
-        for (int index = pounds.length()-1; index >= pounds.length()-3; index--){
-            //Checks that index is still in range to run this code - i.e. needed when pounds.length < 3
-            if (index < 0){
-                count = -1;
-                break;
+    public static int convertToPennies (String pounds) {
+    //    if (moneyValid(pounds)) {
+            int pennies = 0;
+            int count = 0;
+            //This finds where the decimal point is. This is assuming moneyValid method has been run
+            for (int index = pounds.length() - 1; index >= pounds.length() - 3; index--) {
+                //Checks that index is still in range to run this code - i.e. needed when pounds.length < 3
+                if (index < 0) {
+                    count = -1;
+                    break;
+                }
+                if (pounds.charAt(index) == '.') {
+                    break;
+                }
+                count++;
+                //If no decimal point
+                if (index == pounds.length() - 3 & pounds.charAt(index) != '.') {
+                    count = -1;
+                }
             }
-            if (pounds.charAt(index) == '.') {
-                break;
-            }
-            count ++;
-            //If no decimal point
-            if (index == pounds.length()-3 & pounds.charAt(index)!='.'){
-                count = -1;
-            }
-        }
 
-        //Split money at decimal point
-        String [] splitMoney = pounds.split("\\.");
+            //Split money at decimal point
+            String[] splitMoney = pounds.split("\\.");
 
-        //If no DP at all
-        if (count ==-1){
-            pennies = parseInt(pounds)*100;
-        }
-        //If DP at end with no pennies
-        if (count == 0){
-            pennies = parseInt(splitMoney[0])*100;
-        }
-        //If DP has 1 number after it
-        if (count == 1){
-            pennies = parseInt(splitMoney[0]) * 100 + parseInt(splitMoney[1])*10;
-        }
-        //If DP has 2 numbers after it
-        if (count == 2){
-            pennies = parseInt(splitMoney[0]) * 100 + parseInt(splitMoney[1]);
-        }
-        return pennies;
+            //If no DP at all
+            if (count == -1) {
+                pennies = parseInt(pounds) * 100;
+            }
+            //If DP at end with no pennies
+            if (count == 0) {
+                pennies = parseInt(splitMoney[0]) * 100;
+            }
+            //If DP has 1 number after it
+            if (count == 1) {
+                pennies = parseInt(splitMoney[0]) * 100 + parseInt(splitMoney[1]) * 10;
+            }
+            //If DP has 2 numbers after it and not the first character
+            if (count == 2 & pounds.length()>3) {
+                pennies = parseInt(splitMoney[0]) * 100 + parseInt(splitMoney[1]);
+            }
+            //If DP has 2 numbers after is and is the first character
+            if (count == 2 & pounds.length() == 3){
+                pennies = parseInt(splitMoney[0]);
+            }
+            return pennies;
+    //    }
+    //    else {
+    //        return 0;
+    //    }
     }
 
     /*Two methods with same name to print money - one will accept a String (i.e. when money is in pounds format)
