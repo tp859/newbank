@@ -10,7 +10,7 @@ public class NewBank {
 
 	private static final NewBank bank = new NewBank();
 	private final HashMap<String,Customer> customers;
-	
+
 	private NewBank() {
 		customers = new HashMap<>();
 		addTestData();
@@ -38,7 +38,7 @@ public class NewBank {
 	public synchronized CustomerID checkLogInDetails(String userName, String password) {
 		Authenticator authenticator = new Authenticator();
 
-        return authenticator.checkLoginDetails(userName, password);
+		return authenticator.checkLoginDetails(userName, password);
 	}
 
 	// commands from the NewBank customer are processed in this method
@@ -71,9 +71,22 @@ public class NewBank {
 					break;
 
 				case "PAY" :
+					// PAY John 100.00
+
+					// Login as Bhagy
+					// Command: Pay John 100
+					// find Bhagy's account(s) <-- first account or a main account
+					// deduct 100 Bhagy's Checking
+					// find John's account(s)
+					// add 100 to John's Savings
+					// Return SUCCESS if success
+
 					if (splitRequest.length == 3){
+						double amount = convertToDouble(splitRequest[2]);
 						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
-							result = payOther (customer, splitRequest);
+							result = payOther(customer, splitRequest[1], amount);
+							// splitRequest[1] is a String for CustomerID and need to get the Customer ID to transfer to from Authenticator.java
+							// splitRequest[2] needs to be converted to double using the convertoDouble method
 						}
 					}
 					break;
@@ -86,7 +99,7 @@ public class NewBank {
 					}
 					break;
 
-                case "WITHDRAW" :
+				case "WITHDRAW" :
 					if (splitRequest.length == 3){
 						double amount = convertToDouble(splitRequest[1]);
 
@@ -124,21 +137,21 @@ public class NewBank {
 		try { // Try/catch needed in case findAccount throws exception
 			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
 			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
-			return "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
+			return "SUCCESS: The new balance for " + splitRequest[2] + " is Â£" + newBalance;
 		} catch (NullPointerException e) {
 			// No account found with that name
 			return ("FAIL: No account found with that name.");
 		}
 	}
 
-    private String withdraw(CustomerID customer, double amount, String account) {
+	private String withdraw(CustomerID customer, double amount, String account) {
 		try {
 			Customer customerDetails = customers.get(customer.getKey());
 			Account customerAccount = customerDetails.findAccount(account);
 
 			if (customerAccount.getBalance() >= amount) {
 				customerAccount.changeBalanceBy(-amount);
-				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", account, customerAccount.getBalance());
+				return String.format("SUCCESS: The new balance for Account \"%s\" is Â£%.2f", account, customerAccount.getBalance());
 			}
 		}
 		catch (NullPointerException e) {
@@ -148,8 +161,31 @@ public class NewBank {
 		return "FAIL";
 	}
 
-	private String payOther(CustomerID customer, String[] splitRequest) {
-		return ("Code for payments here");
+	private String payOther(CustomerID fromCustomer, String toCustomer, double amount) {
+		try {
+
+			//CustomerID ob = toCustomer;
+			Customer fromCustomerDetails = customers.get(fromCustomer.getKey());
+			// Account fromCustomerAccount = fromCustomerDetails.findFirstAccount();
+			Account fromCustomerAccount = fromCustomerDetails.getFirstAccount();
+
+			Customer toCustomerDetails = customers.get(toCustomer);
+			Account toCustomerAccount = toCustomerDetails.getFirstAccount();
+
+			if (fromCustomerAccount.getBalance() >= amount) {
+				fromCustomerAccount.changeBalanceBy(-amount);
+				return String.format("SUCCESS: The new balance for Account \"%s\" is Â£%.2f", fromCustomerAccount, fromCustomerAccount.getBalance());
+			}
+
+
+			toCustomerAccount.changeBalanceBy(+amount);
+			return String.format("SUCCESS: The new balance for Account \"%s\" is Â£%.2f", toCustomerAccount, toCustomerAccount.getBalance());
+
+		}
+		catch (NullPointerException e) {
+			return ("FAIL: No account found with the name \"%s\"");
+		}
+		//return "FAIL";
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
@@ -157,7 +193,7 @@ public class NewBank {
 
 			double amount = Double.parseDouble(splitRequest[1]);
 			if (amount <= 0) {
-				return "FAIL: Amount must be greater than £0.00";
+				return "FAIL: Amount must be greater than Â£0.00";
 			}
 			Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
 			Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
@@ -202,15 +238,15 @@ public class NewBank {
 		}
 	}
 
-    /*Checks if a given string is a double, and catches exceptions*/
-    private boolean checkDouble(String value) {
-        try {
-            double doubleVal = Double.parseDouble(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
+	/*Checks if a given string is a double, and catches exceptions*/
+	private boolean checkDouble(String value) {
+		try {
+			double doubleVal = Double.parseDouble(value);
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
 
 	/*Checks if a given string is a double, and catches exceptions*/
 	private double convertToDouble(String value){
