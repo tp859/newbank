@@ -2,6 +2,7 @@ package newbank.server;
 
 import java.io.BufferedReader;
 import java.util.HashMap;
+import java.lang.Math;
 
 import static java.lang.System.exit;
 import static java.lang.System.out;
@@ -104,6 +105,24 @@ public class NewBank {
 					}
 					break;
 
+				case "SETOVERDRAFT":
+					// format SETOVERDRAFT <amount> <account>
+					if (splitRequest.length == 3){
+						if(checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+							result = setOverdraft(customer, splitRequest);
+						}
+					}
+					break;
+
+				case "CHECKOVERDRAFT":
+					//format CHECKOVERDRAFT <account>
+					if (splitRequest.length == 2){
+						if (!checkDouble((splitRequest[1]))){
+							result = checkAccountOverdraft(customer, splitRequest) ;
+						}
+					}
+					break;
+
 				default :
 					result = "Command in incorrect format. Try again.";
 
@@ -112,6 +131,38 @@ public class NewBank {
 		}
 		//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
 		return "FAIL. TRY AGAIN.";
+	}
+
+	//Setting up overdraft of up to 1500 £ for individual accounts
+	private String setOverdraft(CustomerID customer, String[] splitRequest){
+		 double overdraft = Double.parseDouble(splitRequest[1]);
+		 if (overdraft < 0 || overdraft > 1500){
+			 return ("FAIL: overdraft limit must be between £0 and £1500");
+		 }
+		 if (customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance() < 0){
+			 return "FAIL: Overdraft increase unavailable for the accounts with negative balance";
+		 }
+		 try {
+			 customers.get(customer.getKey()).findAccount(splitRequest[2]).setOverdraft(overdraft);
+			 String overdraftBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getOverdraft().toString();
+			 return "SUCCESS: The new overdraft limit for " + splitRequest[2] + " is £" + overdraftBalance;
+		 } catch (NullPointerException e){
+			 return ("FAIL: No account found with that name.");
+		 }
+	}
+
+	private String checkAccountOverdraft(CustomerID customer, String[] splitRequest){
+		try{
+			Double overdraftAmount = customers.get(customer.getKey()).findAccount(splitRequest[1]).getOverdraft();
+			if (overdraftAmount > 0) {
+				return "The available overdraft for " + splitRequest[1] + " is £" + Double.toString(overdraftAmount);
+			}
+			else{
+				return "No overdraft set up for the " + splitRequest[1] + " account";
+			}
+		} catch (NullPointerException e){
+			return ("FAIL: No account found with that name.");
+		}
 	}
 
 	private String deposit(CustomerID customer, String[] splitRequest) {
@@ -140,6 +191,14 @@ public class NewBank {
 				customerAccount.changeBalanceBy(-amount);
 				System.out.println(customerAccount.getBalance());
 				return String.format("SUCCESS: The new balance for Account \"%s\" is %s", account, customerAccount.printBalance());
+			}
+			//Enter if overdraft account is set up by the user
+			else if (customerAccount.getBalance() < amount && customerAccount.getOverdraft() > 0 ){
+				if (customerAccount.approveOverdraft(amount)){
+					customerAccount.changeBalanceBy(-(amount + 20)); // 20 is fixed fine for overdraft transaction
+					return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", account, customerAccount.getBalance());
+				}
+				return String.format("FAIL: Maximum overdraft for the Account \"%s\" is £%.2f", account, customerAccount.getOverdraft());
 			}
 		}
 		catch (NullPointerException e) {
