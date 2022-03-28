@@ -138,6 +138,9 @@ public class NewBank {
 		 if (overdraft < 0 || overdraft > 1500){
 			 return ("FAIL: overdraft limit must be between £0 and £1500");
 		 }
+		 if (customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance() < 0){
+			 return "FAIL: Overdraft increase unavailable for the accounts with negative balance";
+		 }
 		 try {
 			 customers.get(customer.getKey()).findAccount(splitRequest[2]).setOverdraft(overdraft);
 			 String overdraftBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getOverdraft().toString();
