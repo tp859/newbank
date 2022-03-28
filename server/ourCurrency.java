@@ -14,8 +14,10 @@ public class ourCurrency{
     }
 
     //Run assuming that decimalValid method has been run prior
-    public static int convertToPennies (String pounds) {
-    //    if (moneyValid(pounds)) {
+    public static int convertToPennies (String pounds) throws NumberFormatException{
+        if (!moneyValid(pounds)) {
+            throw new NumberFormatException("Incorrect monetary value. Please use format #.##");
+        }
             int pennies = 0;
             int count = 0;
             //This finds where the decimal point is. This is assuming moneyValid method has been run
@@ -59,10 +61,6 @@ public class ourCurrency{
                 pennies = parseInt(splitMoney[0]);
             }
             return pennies;
-    //    }
-    //    else {
-    //        return 0;
-    //    }
     }
 
     /*Two methods with same name to print money - one will accept a String (i.e. when money is in pounds format)
