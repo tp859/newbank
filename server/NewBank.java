@@ -2,7 +2,9 @@ package newbank.server;
 
 import java.io.BufferedReader;
 import java.util.HashMap;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+//import java.util.*;
 
 import static java.lang.System.exit;
 import static java.lang.System.out;
@@ -106,7 +108,8 @@ public class NewBank {
 						break;
 
 					default:
-						result = "Command in incorrect format. Try again.";
+						//result = "Command in incorrect format. Try again.";
+						throw new NullPointerException("No account found with this name");
 
 				}
 				return result;
@@ -115,9 +118,8 @@ public class NewBank {
 				return (e.getMessage());
 			}
 			//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
-		 throw new NullPointerException("No account found with this name");
-			//throw new NullPointerException("No account found with this name");
-		}
+		return ("No account found with this name");
+	}
 
 
 	private String deposit(CustomerID customer, String[] splitRequest) {
