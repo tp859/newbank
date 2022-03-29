@@ -2,6 +2,8 @@ package newbank.server;
 
 import java.io.BufferedReader;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.lang.Math;
 
 import static java.lang.System.exit;
@@ -68,8 +70,7 @@ public class NewBank {
 						if(ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2]) & !ourCurrency.moneyValid(splitRequest[3])) {
 							result = transferAccounts (customer, splitRequest);
 						}
-					}
-					break;
+						break;
 
 				case "PAY" :
 					// Fomat "PAY <customerID> <amount>
@@ -87,8 +88,7 @@ public class NewBank {
 						if(ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2])) {
 							result = deposit(customer, splitRequest);
 						}
-					}
-					break;
+						break;
 
 				case "WITHDRAW" :
 					if (splitRequest.length == 3){
@@ -98,15 +98,14 @@ public class NewBank {
 								result = withdraw(customer, amount, splitRequest[2]);
 							}
 						}
-					}
-					break;
+						break;
 
 
-				case "END":
-					if (splitRequest.length == 1) {
-						result = "Code for exit goes here";
-					}
-					break;
+					case "END":
+						if (splitRequest.length == 1) {
+							result = "Code for exit goes here";
+						}
+						break;
 
 				case "SETOVERDRAFT":
 					// format SETOVERDRAFT <amount> <account>
@@ -126,14 +125,16 @@ public class NewBank {
 					}
 					break;
 
-				default :
-					result = "Command in incorrect format. Try again.";
-
+				default:
+						throw new NullPointerException("No account found with this name");
+				}
+				return result;
 			}
-			return result;
-		}
-		//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
-		return "FAIL. TRY AGAIN.";
+		}catch(Exception e){
+				return (e.getMessage());
+			}
+			//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
+		return ("No account found with this name");
 	}
 
 	//Setting up overdraft of up to 1500 £ for individual accounts
@@ -174,18 +175,13 @@ public class NewBank {
 		if (deposit < 0) {
 			return ("FAIL: Deposit amount must be a positive number");
 		}
-		try { // Try/catch needed in case findAccount throws exception
+    
 			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
-			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).printBalance();
-			return "SUCCESS: The new balance for " + splitRequest[2] + " is " + newBalance;
-		} catch (NullPointerException e) {
-			// No account found with that name
-			return ("FAIL: No account found with that name.");
-		}
-	}
+			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
+			return "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
+  }
 
     private String withdraw(CustomerID customer, int amount, String account) {
-		try {
 			Customer customerDetails = customers.get(customer.getKey());
 			Account customerAccount = customerDetails.findAccount(account);
 
@@ -203,12 +199,6 @@ public class NewBank {
 				}
 				return String.format("FAIL: Maximum overdraft for the Account \"%s\" is £%.2f", account, customerAccount.getOverdraft());
 			}
-		}
-		catch (NullPointerException e) {
-			return ("FAIL: No account found with the name \"%s\"");
-		}
-
-		return "FAIL";
 	}
 
 	private String payOther(CustomerID fromCustomer, String toCustomer, double amount) {
@@ -237,11 +227,10 @@ public class NewBank {
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
-		try {
 			int amount = ourCurrency.convertToPennies(splitRequest[1]);
 			System.out.println(amount);
 			if (amount <= 0) {
-				return "FAIL: Amount must be greater than £0.00";
+				return "FAIL: Transferred amount must be a positive number";
 			}
 			Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
 			Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
@@ -258,10 +247,6 @@ public class NewBank {
 			} else {
 				return "FAIL: Insufficient funds";
 			}
-		} catch (NullPointerException e) {
-			return (e.getMessage());
-		}
-
 	}
 
 	private String showMyAccounts(CustomerID customer) {
@@ -269,11 +254,11 @@ public class NewBank {
 	}
 
 	private String createNewAccount(CustomerID customer, String accountName) {
+				customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+				return "SUCCESS: New account is created";
+			}
 
-		customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
 
-		return "SUCCESS";
-	}
 
 	/*Checks if a given string is an integer, and catches exceptions*/
 	private boolean checkInteger(String value){
