@@ -127,46 +127,15 @@ public class NewBank {
 
 				default:
 						throw new NullPointerException("No account found with this name");
-				}
-				return result;
+				} 
+            
+				return result;           
 			}
 		}catch(Exception e){
 				return (e.getMessage());
 			}
 			//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
 		return ("No account found with this name");
-	}
-
-	//Setting up overdraft of up to 1500 £ for individual accounts
-	private String setOverdraft(CustomerID customer, String[] splitRequest){
-		 double overdraft = Double.parseDouble(splitRequest[1]);
-		 if (overdraft < 0 || overdraft > 1500){
-			 return ("FAIL: overdraft limit must be between £0 and £1500");
-		 }
-		 if (customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance() < 0){
-			 return "FAIL: Overdraft increase unavailable for the accounts with negative balance";
-		 }
-		 try {
-			 customers.get(customer.getKey()).findAccount(splitRequest[2]).setOverdraft(overdraft);
-			 String overdraftBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getOverdraft().toString();
-			 return "SUCCESS: The new overdraft limit for " + splitRequest[2] + " is £" + overdraftBalance;
-		 } catch (NullPointerException e){
-			 return ("FAIL: No account found with that name.");
-		 }
-	}
-
-	private String checkAccountOverdraft(CustomerID customer, String[] splitRequest){
-		try{
-			Double overdraftAmount = customers.get(customer.getKey()).findAccount(splitRequest[1]).getOverdraft();
-			if (overdraftAmount > 0) {
-				return "The available overdraft for " + splitRequest[1] + " is £" + Double.toString(overdraftAmount);
-			}
-			else{
-				return "No overdraft set up for the " + splitRequest[1] + " account";
-			}
-		} catch (NullPointerException e){
-			return ("FAIL: No account found with that name.");
-		}
 	}
 
 	private String deposit(CustomerID customer, String[] splitRequest) {
@@ -190,7 +159,7 @@ public class NewBank {
 				customerAccount.changeBalanceBy(-amount);
 				System.out.println(customerAccount.getBalance());
 				return String.format("SUCCESS: The new balance for Account \"%s\" is %s", account, customerAccount.printBalance());
-			}
+			}    
 			//Enter if overdraft account is set up by the user
 			else if (customerAccount.getBalance() < amount && customerAccount.getOverdraft() > 0 ){
 				if (customerAccount.approveOverdraft(amount)){
@@ -218,7 +187,6 @@ public class NewBank {
 
 			toCustomerAccount.changeBalanceBy(+amount);
 			return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", toCustomerAccount, toCustomerAccount.getBalance());
-
 		}
 		catch (NullPointerException e) {
 			return ("FAIL: No account found with the name \"%s\"");
