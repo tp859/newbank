@@ -2,6 +2,9 @@ package newbank.server;
 
 import java.io.BufferedReader;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.lang.Math;
 
 import static java.lang.System.exit;
 import static java.lang.System.out;
@@ -10,7 +13,7 @@ public class NewBank {
 
 	private static final NewBank bank = new NewBank();
 	private final HashMap<String,Customer> customers;
-	
+
 	private NewBank() {
 		customers = new HashMap<>();
 		addTestData();
@@ -38,7 +41,7 @@ public class NewBank {
 	public synchronized CustomerID checkLogInDetails(String userName, String password) {
 		Authenticator authenticator = new Authenticator();
 
-        return authenticator.checkLoginDetails(userName, password);
+		return authenticator.checkLoginDetails(userName, password);
 	}
 
 	// commands from the NewBank customer are processed in this method
@@ -57,107 +60,145 @@ public class NewBank {
 					break;
 
 				case "NEWACCOUNT" :
-					if (!checkInteger(splitRequest[1])) {
+					if (!ourCurrency.moneyValid(splitRequest[1])) {
 						result = createNewAccount(customer, splitRequest[1]);
 					}
 					break;
 
 				case "MOVE" :
 					if (splitRequest.length == 4){
-						if(checkInteger(splitRequest[1]) & !checkInteger(splitRequest[2]) & !checkInteger(splitRequest[3])) {
+						if(ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2]) & !ourCurrency.moneyValid(splitRequest[3])) {
 							result = transferAccounts (customer, splitRequest);
 						}
-					}
-					break;
+						break;
 
 				case "PAY" :
+					// Fomat "PAY <customerID> <amount>
 					if (splitRequest.length == 3){
+
+						double amount = convertToDouble(splitRequest[2]);
 						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
-							result = payOther (customer, splitRequest);
+							result = payOther(customer, splitRequest[1], amount);
 						}
 					}
 					break;
 				case "DEPOSIT" :
 					// Format "DEPOSIT <amount> <accountName>
 					if (splitRequest.length == 3){
-						if(checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+						if(ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2])) {
 							result = deposit(customer, splitRequest);
 						}
-					}
-					break;
+						break;
 
-                case "WITHDRAW" :
+				case "WITHDRAW" :
 					if (splitRequest.length == 3){
-						double amount = convertToDouble(splitRequest[1]);
+						if (ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2])) {
+							int amount = ourCurrency.convertToPennies(splitRequest[1]);
+							if (amount > 0) {
+								result = withdraw(customer, amount, splitRequest[2]);
+							}
+						}
+						break;
 
-						if(amount != -1) {
-							result = withdraw(customer, amount, splitRequest[2]);
+
+					case "END":
+						if (splitRequest.length == 1) {
+							result = "Code for exit goes here";
+						}
+						break;
+
+				case "SETOVERDRAFT":
+					// format SETOVERDRAFT <amount> <account>
+					if (splitRequest.length == 3){
+						if(checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+							result = setOverdraft(customer, splitRequest);
 						}
 					}
 					break;
 
-
-				case "END":
-					if (splitRequest.length == 1) {
-						result = "Code for exit goes here";
+				case "CHECKOVERDRAFT":
+					//format CHECKOVERDRAFT <account>
+					if (splitRequest.length == 2){
+						if (!checkDouble((splitRequest[1]))){
+							result = checkAccountOverdraft(customer, splitRequest) ;
+						}
 					}
 					break;
 
-				default :
-					result = "Command in incorrect format. Try again.";
-
+				default:
+						throw new NullPointerException("No account found with this name");
+				} 
+            
+				return result;           
 			}
-			return result;
-		}
-		//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
-		return "FAIL. TRY AGAIN.";
+		}catch(Exception e){
+				return (e.getMessage());
+			}
+			//The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
+		return ("No account found with this name");
 	}
 
 	private String deposit(CustomerID customer, String[] splitRequest) {
-
-		double deposit = Double.parseDouble(splitRequest[1]); // No need to check this as format checked when input read
+		int deposit = ourCurrency.convertToPennies(splitRequest[1]); // No need to check this as format checked when input read
 		// Check not trying to withdraw using deposit command
 		if (deposit < 0) {
 			return ("FAIL: Deposit amount must be a positive number");
 		}
-
-		try { // Try/catch needed in case findAccount throws exception
+    
 			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
 			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
 			return "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
-		} catch (NullPointerException e) {
-			// No account found with that name
-			return ("FAIL: No account found with that name.");
-		}
-	}
+  }
 
-    private String withdraw(CustomerID customer, double amount, String account) {
-		try {
+    private String withdraw(CustomerID customer, int amount, String account) {
 			Customer customerDetails = customers.get(customer.getKey());
 			Account customerAccount = customerDetails.findAccount(account);
 
 			if (customerAccount.getBalance() >= amount) {
+				System.out.println(customerAccount.getBalance());
 				customerAccount.changeBalanceBy(-amount);
-				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", account, customerAccount.getBalance());
+				System.out.println(customerAccount.getBalance());
+				return String.format("SUCCESS: The new balance for Account \"%s\" is %s", account, customerAccount.printBalance());
+			}    
+			//Enter if overdraft account is set up by the user
+			else if (customerAccount.getBalance() < amount && customerAccount.getOverdraft() > 0 ){
+				if (customerAccount.approveOverdraft(amount)){
+					customerAccount.changeBalanceBy(-(amount + 20)); // 20 is fixed fine for overdraft transaction
+					return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", account, customerAccount.getBalance());
+				}
+				return String.format("FAIL: Maximum overdraft for the Account \"%s\" is £%.2f", account, customerAccount.getOverdraft());
 			}
+	}
+
+	private String payOther(CustomerID fromCustomer, String toCustomer, double amount) {
+		try {
+
+			Customer fromCustomerDetails = customers.get(fromCustomer.getKey());
+			Account fromCustomerAccount = fromCustomerDetails.getFirstAccount();
+
+			Customer toCustomerDetails = customers.get(toCustomer);
+			Account toCustomerAccount = toCustomerDetails.getFirstAccount();
+
+			if (fromCustomerAccount.getBalance() >= amount) {
+				fromCustomerAccount.changeBalanceBy(-amount);
+				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", fromCustomerAccount, fromCustomerAccount.getBalance());
+			}
+
+
+			toCustomerAccount.changeBalanceBy(+amount);
+			return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", toCustomerAccount, toCustomerAccount.getBalance());
 		}
 		catch (NullPointerException e) {
 			return ("FAIL: No account found with the name \"%s\"");
 		}
-
-		return "FAIL";
-	}
-
-	private String payOther(CustomerID customer, String[] splitRequest) {
-		return ("Code for payments here");
+		//return "FAIL";
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
-		try {
-
-			double amount = Double.parseDouble(splitRequest[1]);
+			int amount = ourCurrency.convertToPennies(splitRequest[1]);
+			System.out.println(amount);
 			if (amount <= 0) {
-				return "FAIL: Amount must be greater than £0.00";
+				return "FAIL: Transferred amount must be a positive number";
 			}
 			Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
 			Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
@@ -174,10 +215,6 @@ public class NewBank {
 			} else {
 				return "FAIL: Insufficient funds";
 			}
-		} catch (NullPointerException e) {
-			return (e.getMessage());
-		}
-
 	}
 
 	private String showMyAccounts(CustomerID customer) {
@@ -185,11 +222,11 @@ public class NewBank {
 	}
 
 	private String createNewAccount(CustomerID customer, String accountName) {
+				customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+				return "SUCCESS: New account is created";
+			}
 
-		customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
 
-		return "SUCCESS";
-	}
 
 	/*Checks if a given string is an integer, and catches exceptions*/
 	private boolean checkInteger(String value){
@@ -202,15 +239,15 @@ public class NewBank {
 		}
 	}
 
-    /*Checks if a given string is a double, and catches exceptions*/
-    private boolean checkDouble(String value) {
-        try {
-            double doubleVal = Double.parseDouble(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
+	/*Checks if a given string is a double, and catches exceptions*/
+	private boolean checkDouble(String value) {
+		try {
+			double doubleVal = Double.parseDouble(value);
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
 
 	/*Checks if a given string is a double, and catches exceptions*/
 	private double convertToDouble(String value){
