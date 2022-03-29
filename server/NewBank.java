@@ -137,7 +137,7 @@ public class NewBank {
 		try { // Try/catch needed in case findAccount throws exception
 			customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
 			String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance().toString();
-			return "SUCCESS: The new balance for " + splitRequest[2] + " is Â£" + newBalance;
+			return "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
 		} catch (NullPointerException e) {
 			// No account found with that name
 			return ("FAIL: No account found with that name.");
@@ -151,7 +151,7 @@ public class NewBank {
 
 			if (customerAccount.getBalance() >= amount) {
 				customerAccount.changeBalanceBy(-amount);
-				return String.format("SUCCESS: The new balance for Account \"%s\" is Â£%.2f", account, customerAccount.getBalance());
+				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", account, customerAccount.getBalance());
 			}
 		}
 		catch (NullPointerException e) {
@@ -174,12 +174,12 @@ public class NewBank {
 
 			if (fromCustomerAccount.getBalance() >= amount) {
 				fromCustomerAccount.changeBalanceBy(-amount);
-				return String.format("SUCCESS: The new balance for Account \"%s\" is Â£%.2f", fromCustomerAccount, fromCustomerAccount.getBalance());
+				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", fromCustomerAccount, fromCustomerAccount.getBalance());
 			}
 
 
 			toCustomerAccount.changeBalanceBy(+amount);
-			return String.format("SUCCESS: The new balance for Account \"%s\" is Â£%.2f", toCustomerAccount, toCustomerAccount.getBalance());
+			return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", toCustomerAccount, toCustomerAccount.getBalance());
 
 		}
 		catch (NullPointerException e) {
@@ -193,7 +193,7 @@ public class NewBank {
 
 			double amount = Double.parseDouble(splitRequest[1]);
 			if (amount <= 0) {
-				return "FAIL: Amount must be greater than Â£0.00";
+				return "FAIL: Amount must be greater than £0.00";
 			}
 			Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
 			Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
