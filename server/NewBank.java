@@ -71,22 +71,11 @@ public class NewBank {
 					break;
 
 				case "PAY" :
-					// PAY John 100.00
-
-					// Login as Bhagy
-					// Command: Pay John 100
-					// find Bhagy's account(s) <-- first account or a main account
-					// deduct 100 Bhagy's Checking
-					// find John's account(s)
-					// add 100 to John's Savings
-					// Return SUCCESS if success
-
+					// Fomat "PAY <customerID> <amount>
 					if (splitRequest.length == 3){
 						double amount = convertToDouble(splitRequest[2]);
 						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
 							result = payOther(customer, splitRequest[1], amount);
-							// splitRequest[1] is a String for CustomerID and need to get the Customer ID to transfer to from Authenticator.java
-							// splitRequest[2] needs to be converted to double using the convertoDouble method
 						}
 					}
 					break;
@@ -164,9 +153,7 @@ public class NewBank {
 	private String payOther(CustomerID fromCustomer, String toCustomer, double amount) {
 		try {
 
-			//CustomerID ob = toCustomer;
 			Customer fromCustomerDetails = customers.get(fromCustomer.getKey());
-			// Account fromCustomerAccount = fromCustomerDetails.findFirstAccount();
 			Account fromCustomerAccount = fromCustomerDetails.getFirstAccount();
 
 			Customer toCustomerDetails = customers.get(toCustomer);
