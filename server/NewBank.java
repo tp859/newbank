@@ -178,18 +178,11 @@ public class NewBank {
 	}
 
 	private String createNewAccount(CustomerID customer, String accountName) {
-		List<String> account_names = new ArrayList<String>();
-		account_names.add("Main");
-		account_names.add("Savings");
-		account_names.add("Checking");
-		for (String acc : account_names) {
-			if (acc.equals(accountName)) {
 				customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
 				return "SUCCESS: New account is created";
 			}
-		}
-		return "FAIL:Invalid account name";
-	}
+
+
 
 	/*Checks if a given string is an integer, and catches exceptions*/
 	private boolean checkInteger(String value){
