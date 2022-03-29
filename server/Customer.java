@@ -38,11 +38,6 @@ public class Customer {
 		if (account!=null)
 			return account;
 
-		/*for (Account account : accounts) {
-			if (account.getAccountName().equals(name)) {
-				return account;
-			}
-		}*/
 		throw new NullPointerException("No account found with name \"");
 
 	}
