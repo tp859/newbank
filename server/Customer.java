@@ -3,13 +3,13 @@ package newbank.server;
 import java.util.ArrayList;
 
 public class Customer {
-	
+
 	private final ArrayList<Account> accounts;
-	
+
 	public Customer() {
 		accounts = new ArrayList<>();
 	}
-	
+
 	public String accountsToString() {
 		StringBuilder s = new StringBuilder();
 		for(Account a : accounts) {
@@ -20,7 +20,7 @@ public class Customer {
 	}
 
 	public void addAccount(Account account) {
-		accounts.add(account);		
+		accounts.add(account);
 	}
 
 	public Account findAccount(String name) throws NullPointerException {
@@ -30,5 +30,15 @@ public class Customer {
 			}
 		}
 		throw new NullPointerException("No account found with name \"" + name + "\"");
+	}
+
+	public Account getFirstAccount() throws NullPointerException {
+
+		Account account = accounts.get(0);
+		if (account!=null)
+			return account;
+
+		throw new NullPointerException("No account found with name \"");
+
 	}
 }

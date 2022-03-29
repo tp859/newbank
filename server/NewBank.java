@@ -11,7 +11,7 @@ public class NewBank {
 
 	private static final NewBank bank = new NewBank();
 	private final HashMap<String,Customer> customers;
-	
+
 	private NewBank() {
 		customers = new HashMap<>();
 		addTestData();
@@ -39,7 +39,7 @@ public class NewBank {
 	public synchronized CustomerID checkLogInDetails(String userName, String password) {
 		Authenticator authenticator = new Authenticator();
 
-        return authenticator.checkLoginDetails(userName, password);
+		return authenticator.checkLoginDetails(userName, password);
 	}
 
 	// commands from the NewBank customer are processed in this method
@@ -72,9 +72,12 @@ public class NewBank {
 					break;
 
 				case "PAY" :
+					// Fomat "PAY <customerID> <amount>
 					if (splitRequest.length == 3){
-						if(!ourCurrency.moneyValid(splitRequest[1]) & ourCurrency.moneyValid(splitRequest[2])) {
-							result = payOther (customer, splitRequest);
+
+						double amount = convertToDouble(splitRequest[2]);
+						if(!checkInteger(splitRequest[1]) & checkInteger(splitRequest[2])) {
+							result = payOther(customer, splitRequest[1], amount);
 						}
 					}
 					break;
@@ -87,7 +90,7 @@ public class NewBank {
 					}
 					break;
 
-                case "WITHDRAW" :
+				case "WITHDRAW" :
 					if (splitRequest.length == 3){
 						if (ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2])) {
 							int amount = ourCurrency.convertToPennies(splitRequest[1]);
@@ -208,8 +211,29 @@ public class NewBank {
 		return "FAIL";
 	}
 
-	private String payOther(CustomerID customer, String[] splitRequest) {
-		return ("Code for payments here");
+	private String payOther(CustomerID fromCustomer, String toCustomer, double amount) {
+		try {
+
+			Customer fromCustomerDetails = customers.get(fromCustomer.getKey());
+			Account fromCustomerAccount = fromCustomerDetails.getFirstAccount();
+
+			Customer toCustomerDetails = customers.get(toCustomer);
+			Account toCustomerAccount = toCustomerDetails.getFirstAccount();
+
+			if (fromCustomerAccount.getBalance() >= amount) {
+				fromCustomerAccount.changeBalanceBy(-amount);
+				return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", fromCustomerAccount, fromCustomerAccount.getBalance());
+			}
+
+
+			toCustomerAccount.changeBalanceBy(+amount);
+			return String.format("SUCCESS: The new balance for Account \"%s\" is £%.2f", toCustomerAccount, toCustomerAccount.getBalance());
+
+		}
+		catch (NullPointerException e) {
+			return ("FAIL: No account found with the name \"%s\"");
+		}
+		//return "FAIL";
 	}
 
 	private String transferAccounts(CustomerID customer, String[] splitRequest) {
@@ -262,15 +286,15 @@ public class NewBank {
 		}
 	}
 
-    /*Checks if a given string is a double, and catches exceptions*/
-    private boolean checkDouble(String value) {
-        try {
-            double doubleVal = Double.parseDouble(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
+	/*Checks if a given string is a double, and catches exceptions*/
+	private boolean checkDouble(String value) {
+		try {
+			double doubleVal = Double.parseDouble(value);
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
 
 	/*Checks if a given string is a double, and catches exceptions*/
 	private double convertToDouble(String value){
