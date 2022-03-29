@@ -9,27 +9,27 @@ import java.net.UnknownHostException;
 
 public class ExampleClient extends Thread{
 	
-	private Socket server;
-	private PrintWriter bankServerOut;
-	private BufferedReader userInput;
-	private Thread bankServerResponseThread;
-	
-	public ExampleClient(String ip, int port) throws UnknownHostException, IOException {
+	private final Socket server;
+	private final PrintWriter bankServerOut;
+	private final BufferedReader userInput;
+
+	public ExampleClient(String ip, int port) throws IOException {
+
 		server = new Socket(ip,port);
 		userInput = new BufferedReader(new InputStreamReader(System.in)); 
-		bankServerOut = new PrintWriter(server.getOutputStream(), true); 
-		
-		bankServerResponseThread = new Thread() {
-			private BufferedReader bankServerIn = new BufferedReader(new InputStreamReader(server.getInputStream()));
+		bankServerOut = new PrintWriter(server.getOutputStream(), true);
+
+		final Thread bankServerResponseThread = new Thread() {
+			private final BufferedReader bankServerIn = new BufferedReader(new InputStreamReader(server.getInputStream()));
+
 			public void run() {
 				try {
-					while(true) {
+					while (true) {
 						String response = bankServerIn.readLine();
 						System.out.println(response);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
-					return;
 				}
 			}
 		};
@@ -51,7 +51,7 @@ public class ExampleClient extends Thread{
 		}
 	}
 	
-	public static void main(String[] args) throws UnknownHostException, IOException, InterruptedException {
+	public static void main(String[] args) throws IOException{
 		new ExampleClient("localhost",14002).start();
 	}
 }

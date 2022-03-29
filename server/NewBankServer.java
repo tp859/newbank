@@ -6,7 +6,7 @@ import java.net.Socket;
 
 public class NewBankServer extends Thread{
 	
-	private ServerSocket server;
+	private final ServerSocket server;
 	
 	public NewBankServer(int port) throws IOException {
 		server = new ServerSocket(port);
