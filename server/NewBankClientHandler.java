@@ -59,7 +59,7 @@ public class NewBankClientHandler extends Thread{
 	}
 
 	private CustomerID getUserLogin() throws IOException {
-		// ask for user name
+		// ask for username
 		out.println("Enter Username");
 		String userName = in.readLine();
 		// ask for password

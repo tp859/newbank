@@ -4,6 +4,7 @@ public class Account {
 	
 	private final String accountName;
 	private int balance;
+	private Double overdraft;
 
 	public Account(String accountName, double openingBalance) {
 		this.accountName = accountName;
@@ -32,6 +33,18 @@ public class Account {
 		this.balance += sum;
 	}
 
+	public Double getOverdraft(){
+		return this.overdraft;
+	}
+
+	public void setOverdraft(double amount){
+		this.overdraft = amount;
+	}
+
+	public boolean approveOverdraft(double amount){
+		//Checking if the system should allow transaction with 20£ fixed fine
+		return balance + overdraft >= amount + 20;
+	}
 
 	public boolean checkBalance(int amount){
 		return !(amount > this.balance);

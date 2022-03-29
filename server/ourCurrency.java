@@ -63,23 +63,8 @@ public class ourCurrency{
             return pennies;
     }
 
-    /*Two methods with same name to print money - one will accept a String (i.e. when money is in pounds format)
-     *The other will accept an int (i.e. when money is in pennies format)
-     */
-    /*public static String printMoney(String sPounds) {
-        int pennies = convertToPennies(sPounds);
-        double dPennies = pennies;
-        BigDecimal pounds = new BigDecimal(dPennies / 100);
-        Locale gb = new Locale("en", "GB");
-        Currency gbp = Currency.getInstance(gb);
-        NumberFormat gbpFormat = NumberFormat.getCurrencyInstance(gb);
-        return (gbpFormat.format(pounds));
-    }
-    */
-
     public static String printMoney(int pennies){
-        double dPennies = pennies;
-        BigDecimal pounds = new BigDecimal(dPennies / 100);
+        BigDecimal pounds = new BigDecimal((double) pennies / 100);
         Locale gb = new Locale("en", "GB");
         Currency gbp = Currency.getInstance(gb);
         NumberFormat gbpFormat = NumberFormat.getCurrencyInstance(gb);
@@ -118,12 +103,7 @@ public class ourCurrency{
             return true;
         }
         //If decimal is in the last 3 positions in the string, return true
-        if (position<= pounds.length()-1 & position >= pounds.length()-3){
-            return true;
-        }
         //Otherwise decimal is in invalid place for money - return false
-        else {
-            return false;
-        }
+        return position <= pounds.length() - 1 & position >= pounds.length() - 3;
     }
 }
