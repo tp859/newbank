@@ -1,0 +1,5 @@
+
+/***** Welcome to NewBank *****/
+Please choose from the following options:
+- To login as an existing user, type 1 and press enter
+- To join New Bank and create a login, type 2 and press enter
