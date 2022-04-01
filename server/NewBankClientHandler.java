@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.io.FileReader;
 
 public class NewBankClientHandler extends Thread{
 	
@@ -20,13 +21,45 @@ public class NewBankClientHandler extends Thread{
 	}
 	
 	public void run() {
-		// keep getting requests from the client and processing them
+		// Keep getting requests from the client and processing them
 		try {
-			CustomerID customer = getUserLogin();
+			CustomerID customer = null;
 
-			while (customer == null){
-				out.println("Invalid details, try again.");
-				customer = getUserLogin();
+			while (customer == null) {
+				// Load welcome text from file
+				loadMainMenu();
+
+				String selectedOption = getMenuOption();
+
+				// Check option is valid
+				while (!selectedOption.equals("1") && !selectedOption.equals("2")) {
+					out.println("Invalid option, please try again.");
+					selectedOption = getMenuOption();
+				}
+
+				if (selectedOption.equals("1")) {
+					// Existing user
+					out.println("Welcome back!");
+					customer = getUserLogin();
+
+					// Handle authentication fail
+					while (customer == null) {
+						out.println("Invalid details, would you like to retry (y/n)?");
+						selectedOption = getMenuOption();
+						while (!selectedOption.equals("n") && !selectedOption.equals("y")) {
+							out.println("Invalid option, please try again.");
+							selectedOption = getMenuOption();
+						}
+						if (selectedOption.equals("n")) {
+							break;
+						} else {
+							customer = getUserLogin();
+						}
+					}
+				} else {
+					// New user
+					customer = createUserLogin();
+				}
 			}
 
 			processInput(customer);
@@ -58,17 +91,73 @@ public class NewBankClientHandler extends Thread{
 		}
 	}
 
+	// Loads welcome text from file
+	private void loadMainMenu() {
+		try (BufferedReader br = new BufferedReader(new FileReader("server/mainmenu.txt"))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				out.println(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			Thread.currentThread().interrupt();
+		}
+	}
+
+	private String getMenuOption() throws IOException {
+		String option = in.readLine();
+		return option;
+	}
+
+	private CustomerID createUserLogin() throws IOException {
+		out.println("Welcome to user setup");
+		out.println("Enter your firstname to generate a username:");
+		String firstname = in.readLine();
+		firstname = checkNullInput("Firstname", firstname);
+
+		// Generate username
+		String username = bank.generateUsername(firstname);
+		out.printf("Thanks, your username is %s, please make a note of this.\n", username);
+
+		out.println("Now enter a password:");
+		String password = in.readLine();
+		password = checkNullInput("Password", password);
+
+		out.println("Thanks, please re-enter your password to confirm:");
+		String passwordConfirmed = in.readLine();
+		while (!password.equals(passwordConfirmed)) {
+			out.println("Passwords do not match, please try again");
+			out.println("Please enter a password:");
+			password = in.readLine();
+			password = checkNullInput("Password", password);
+			out.println("Thanks, please re-enter your password to confirm:");
+			passwordConfirmed = in.readLine();
+		}
+
+		out.println("Thanks, setup complete, logging in...");
+		return new CustomerID(username);
+	}
+
+	private String checkNullInput(String field, String input) throws IOException {
+
+		while (input.isEmpty() || input.isBlank()) {
+			out.printf("%s cannot be empty, please try again\n", field);
+			out.printf("Please enter your %s:\n", field);
+			input = in.readLine();
+		}
+		return input;
+	}
+
 	private CustomerID getUserLogin() throws IOException {
 		// ask for username
-		out.println("Enter Username");
+		out.println("Enter Username:");
 		String userName = in.readLine();
 		// ask for password
-		out.println("Enter Password");
+		out.println("Enter Password:");
 		String password = in.readLine();
 		out.println("Checking Details...");
 		// authenticate user and get customer ID token from bank for use in subsequent requests
 		// if the user is authenticated then get requests from the user and process them
 		return bank.checkLogInDetails(userName, password);
 	}
-
 }
