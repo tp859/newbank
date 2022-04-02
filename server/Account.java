@@ -6,9 +6,15 @@ public class Account {
 	private int balance;
 	private Double overdraft;
 
-	public Account(String accountName, double openingBalance) {
+	public Account(String accountName, double openingBalanceInPounds) {
 		this.accountName = accountName;
-		this.balance = ourCurrency.convertToPennies(Double.toString(openingBalance));
+		this.balance = ourCurrency.convertToPennies(Double.toString(openingBalanceInPounds));
+	}
+
+	public Account(String accountName, int openingBalance, double overdraft) {
+		this.accountName = accountName;
+		this.balance = openingBalance;
+		this.overdraft = overdraft;
 	}
 	
 	public String toString() {
