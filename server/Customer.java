@@ -1,6 +1,7 @@
 package newbank.server;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Customer {
 
@@ -30,6 +31,15 @@ public class Customer {
 			}
 		}
 		throw new NullPointerException("No account found with name \"" + name + "\"");
+	}
+
+	public boolean checkAcc(String name) throws NullPointerException {
+		for (Account account : accounts) {
+			if (account.getAccountName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public Account getFirstAccount() throws NullPointerException {
