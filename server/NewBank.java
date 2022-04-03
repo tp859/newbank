@@ -249,24 +249,9 @@ public class NewBank {
     }
 
     private String createNewAccount(CustomerID customer, String accountName) {
-        //customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
-        //return "SUCCESS: New account is created";
-        //Account s=new Account();
-       // String firstAcc=s.getAccountName();
-        //String firstAcc = customers.get(customer.getKey()).findAccount(accountName).getAccountName();
         if(customers.get(customer.getKey()).checkAcc(accountName)){
             return String.format("The account \"%s\" already exists", accountName);
         }else{
-       /* List<String> allAccounts=new ArrayList<String>();
-        allAccounts.add(firstAcc.toString());
-        allAccounts.add(accountName);
-
-        //Customer existingAccounts=new Customer();
-        for (String account:allAccounts)
-            if(account.equals(accountName)) {
-            return String.format("The account \"%s\" already exists", accountName);
-        }else {*/
-            //Account existingAccounts = customers.get(customer.getKey()).findAccount(accountName);
             List<String> account_names = new ArrayList<String>();
             account_names.add("Main");
             account_names.add("Savings");
