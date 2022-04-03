@@ -10,7 +10,6 @@ import java.util.ArrayList;
 
 public class NewBankDB {
 
-    final static String DELIMITER = ",";
     Connection connection = null;
     Statement statement = null;
 
@@ -45,6 +44,12 @@ public class NewBankDB {
         return false;
     }
 
+    public Boolean addLogin(String customerID, String password) {
+
+        return execute(String.format("INSERT INTO Logins (CustomerID, Password) VALUES ('%s', '%s')",
+                customerID, password));
+    }
+
     public ArrayList<Account> getAccountsForCustomer(String customerID) {
         try {
 
@@ -72,31 +77,19 @@ public class NewBankDB {
     }
 
     public Boolean addCustomerAccount(String customerID, Account account) {
-        try {
-            this.statement = connection.createStatement();
-            statement.execute(String.format("INSERT INTO Accounts (CustomerID, AccountName, Balance) VALUES ('%s', '%s', '%d')",
-                    customerID, account.getAccountName(), account.getBalance()));
 
-            return true;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-
-        return false;
+        return execute(String.format("INSERT INTO Accounts (CustomerID, AccountName, Balance) VALUES ('%s', '%s', '%d')",
+                customerID, account.getAccountName(), account.getBalance()));
     }
 
-    public Boolean addLogin(String customerID, String password) {
-        try {
-            this.statement = connection.createStatement();
-            statement.execute(String.format("INSERT INTO Logins (CustomerID, Password) VALUES ('%s', '%s')",
-                    customerID, password));
+    public Boolean updateCustomerAccountBalance(String customerID, String accountName, int newBalance){
 
-            return true;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        return updateCustomerAccount(customerID, accountName, newBalance, "Balance");
+    }
 
-        return false;
+    public Boolean updateCustomerAccountOverdraft(String customerID, String accountName, int newOverdraft){
+
+        return updateCustomerAccount(customerID, accountName, newOverdraft, "Overdraft");
     }
 
     public void closeConnection() {
@@ -105,5 +98,23 @@ public class NewBankDB {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private Boolean updateCustomerAccount(String customerID, String accountName, int value, String valueName){
+        return execute(String.format("UPDATE Accounts SET %s = '%d' WHERE CustomerID = '%s' and AccountName = '%s'",
+                valueName, value, customerID, accountName));
+    }
+
+    private Boolean execute(String query){
+        try {
+            this.statement = connection.createStatement();
+
+            return statement.execute(query);
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return false;
     }
 }
