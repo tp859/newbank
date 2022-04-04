@@ -8,6 +8,7 @@ public class NewBank {
 
     private static final NewBank bank = new NewBank();
     private final HashMap<String, Customer> customers;
+    Authenticator authenticator = new Authenticator();
 
     private NewBank() {
         customers = new HashMap<>();
@@ -36,10 +37,15 @@ public class NewBank {
     }
 
     public synchronized CustomerID checkLogInDetails(String userName, String password) {
-        Authenticator authenticator = new Authenticator();
 
         return authenticator.checkLoginDetails(userName, password);
     }
+
+    public synchronized String generateUsername(String firstname) {
+
+        return authenticator.generateUsername(firstname);
+    }
+
 
     // commands from the NewBank customer are processed in this method
     public synchronized String processRequest(CustomerID customer, String request) {
