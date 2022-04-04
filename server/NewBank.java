@@ -1,6 +1,8 @@
 package newbank.server;
 
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NewBank {
 
@@ -251,9 +253,23 @@ public class NewBank {
     }
 
     private String createNewAccount(CustomerID customer, String accountName) {
-        customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
-        return "SUCCESS: New account is created";
+        if(customers.get(customer.getKey()).checkAcc(accountName)){
+            return String.format("The account \"%s\" already exists", accountName);
+        }else{
+            List<String> account_names = new ArrayList<String>();
+            account_names.add("Main");
+            account_names.add("Savings");
+            account_names.add("Checking");
+            for (String acc : account_names) {
+                if (acc.equals(accountName)) {
+                    customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+                    return "SUCCESS: New account is created";
+                }
+            }
+        }
+        return "FAIL:Invalid account name";
     }
+
 
     /*Checks if a given string is a double, and catches exceptions*/
     private boolean checkDouble(String value) {
