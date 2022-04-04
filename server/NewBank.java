@@ -71,7 +71,6 @@ public class NewBank {
                     case "PAY":
                         // Fomat "PAY <customerID> <amount>
                         if (splitRequest.length == 3) {
-
                             if (ourCurrency.moneyValid(splitRequest[2])) {
                                 result = payOther(customer, splitRequest);
                             }
@@ -107,7 +106,7 @@ public class NewBank {
                     case "SETOVERDRAFT":
                         // format SETOVERDRAFT <amount> <account>
                         if (splitRequest.length == 3) {
-                            if (checkDouble(splitRequest[1]) & !checkDouble(splitRequest[2])) {
+                            if (ourCurrency.moneyValid(splitRequest[1]) & !ourCurrency.moneyValid(splitRequest[2])) {
                                 result = setOverdraft(customer, splitRequest);
                             }
                         }
@@ -116,7 +115,7 @@ public class NewBank {
                     case "CHECKOVERDRAFT":
                         //format CHECKOVERDRAFT <account>
                         if (splitRequest.length == 2) {
-                            if (!checkDouble((splitRequest[1]))) {
+                            if (!ourCurrency.moneyValid((splitRequest[1]))) {
                                 result = checkAccountOverdraft(customer, splitRequest);
                             }
                         }
@@ -137,8 +136,8 @@ public class NewBank {
 
     //Setting up overdraft of up to 1500 £ for individual accounts
     private String setOverdraft(CustomerID customer, String[] splitRequest){
-        double overdraft = Double.parseDouble(splitRequest[1]);
-        if (overdraft < 0 || overdraft > 1500){
+        int overdraft = ourCurrency.convertToPennies(splitRequest[1]);
+        if (overdraft < 0 || overdraft > 150000){
             return ("FAIL: overdraft limit must be between £0 and £1500");
         }
         if (customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance() < 0){
@@ -146,8 +145,8 @@ public class NewBank {
         }
         try {
             customers.get(customer.getKey()).findAccount(splitRequest[2]).setOverdraft(overdraft);
-            String overdraftBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getOverdraft().toString();
-            return "SUCCESS: The new overdraft limit for " + splitRequest[2] + " is £" + overdraftBalance;
+            int overdraftBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getOverdraft();
+            return "SUCCESS: The new overdraft limit for " + splitRequest[2] + " is " + ourCurrency.printMoney(overdraftBalance);
         } catch (NullPointerException e){
             return ("FAIL: No account found with that name.");
         }
@@ -155,9 +154,10 @@ public class NewBank {
 
     private String checkAccountOverdraft(CustomerID customer, String[] splitRequest){
         try{
-            Double overdraftAmount = customers.get(customer.getKey()).findAccount(splitRequest[1]).getOverdraft();
+            int overdraftAmount = customers.get(customer.getKey()).findAccount(splitRequest[1]).getOverdraft();
+            String overdraftPrint = customers.get(customer.getKey()).findAccount(splitRequest[1]).printOverdraft();
             if (overdraftAmount > 0) {
-                return "The available overdraft for " + splitRequest[1] + " is £" + overdraftAmount;
+                return "The available overdraft for " + splitRequest[1] + " is " + overdraftPrint;
             }
             else{
                 return "No overdraft set up for the " + splitRequest[1] + " account";
@@ -176,7 +176,7 @@ public class NewBank {
 
         customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
         String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).printBalance();
-        return "SUCCESS: The new balance for " + splitRequest[2] + " is £" + newBalance;
+        return "SUCCESS: The new balance for " + splitRequest[2] + " is " + newBalance;
     }
 
     private String withdraw(CustomerID customer, int amount, String account) {
@@ -192,10 +192,10 @@ public class NewBank {
         //Enter if overdraft account is set up by the user
         else if (customerAccount.getBalance() < amount && customerAccount.getOverdraft() > 0) {
             if (customerAccount.approveOverdraft(amount)) {
-                customerAccount.changeBalanceBy(-(amount + 20)); // 20 is fixed fine for overdraft transaction
-                return String.format("SUCCESS: The new balance for Account \"%s\" is £%s", account, customerAccount.printBalance());
+                customerAccount.changeBalanceBy(-(amount + 2000)); // £20/2000p is fixed fine for overdraft transaction
+                return String.format("SUCCESS: The new balance for Account \"%s\" is %s", account, customerAccount.printBalance());
             }
-            return String.format("FAIL: Maximum overdraft for the Account \"%s\" is £%s", account, customerAccount.printBalance());
+            return String.format("FAIL: Maximum overdraft for the Account \"%s\" is %s", account, customerAccount.printOverdraft());
         }
         return String.format("FAIL: The Account \"%s\" does not have enough balance, and it has no overdraft set up.", account);
     }
@@ -212,11 +212,11 @@ public class NewBank {
 
             if (fromCustomerAccount.getBalance() >= amount) {
                 fromCustomerAccount.changeBalanceBy(-amount);
-                return String.format("SUCCESS: The new balance for Account \"%s\" is £%s", fromCustomerAccount, fromCustomerAccount.printBalance());
+                return String.format("SUCCESS: The new balance for Account \"%s\" is %s", fromCustomerDetails.getFirstAccount().getAccountName(), fromCustomerAccount.printBalance());
             }
 
             toCustomerAccount.changeBalanceBy(+amount);
-            return String.format("SUCCESS: The new balance for Account \"%s\" is £%s", toCustomerAccount, toCustomerAccount.printBalance());
+            return String.format("SUCCESS: The new balance for Account \"%s\" is %s", toCustomerDetails.getFirstAccount().getBalance(), toCustomerAccount.printBalance());
     }
 
     private String transferAccounts(CustomerID customer, String[] splitRequest) {
