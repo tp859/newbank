@@ -14,7 +14,7 @@ public class Account {
 	public Account(String accountName, int openingBalance, double overdraft) {
 		this.accountName = accountName;
 		this.balance = openingBalance;
-		this.overdraft = overdraft;
+		this.overdraft = (int)overdraft;
 	}
 	
 	public String toString() {
