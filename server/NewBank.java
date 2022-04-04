@@ -24,6 +24,8 @@ public class NewBank {
         Customer john = new Customer();
         john.addAccount(new Account("Checking", 250.0));
         customers.put("John", john);
+
+
     }
 
     public static NewBank getBank() {
@@ -242,8 +244,10 @@ public class NewBank {
         }
     }
 
-    private String showMyAccounts(CustomerID customer) {
-        return (customers.get(customer.getKey())).accountsToString();
+    private String showMyAccounts(CustomerID customerID) {
+        Customer customer = new Customer(customerID);
+
+        return customer.accountsToString();
     }
 
     private String createNewAccount(CustomerID customer, String accountName) {
@@ -260,4 +264,6 @@ public class NewBank {
             return false;
         }
     }
+
+
 }

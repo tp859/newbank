@@ -10,6 +10,10 @@ public class Customer {
 		accounts = new ArrayList<>();
 	}
 
+	public Customer(CustomerID customerID) {
+		accounts = NewBankServer.newBankDB.getAccountsForCustomer(customerID.getKey());
+	}
+
 	public String accountsToString() {
 		StringBuilder s = new StringBuilder();
 		for(Account a : accounts) {
@@ -39,6 +43,5 @@ public class Customer {
 			return account;
 
 		throw new NullPointerException("No account found with name \"");
-
 	}
 }

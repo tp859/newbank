@@ -1,23 +1,25 @@
 package newbank.server;
 
+import newbank.Database.NewBankDB;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.ResultSet;
 
 public class Authenticator implements IAuthenticator {
     @Override
-    public CustomerID checkLoginDetails(String userName, String password) {
+    public CustomerID checkLoginDetails(String username, String password) {
 
-        try (BufferedReader reader = new BufferedReader(new FileReader("server/logins.csv"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] login = line.split(",");
+        try {
 
-                if (login[0].equals(userName) && login[1].equals(password)) {
-                    return new CustomerID(userName);
-                }
-            }
-        } catch (IOException e) {
+        Boolean loginCorrect = NewBankServer.newBankDB.checkLogin(username, password);
+
+        if(loginCorrect){
+            return new CustomerID(username);
+        }
+
+        } catch (Exception e) {
             System.out.println("Cannot access logins database");
             Thread.currentThread().interrupt();
         }
