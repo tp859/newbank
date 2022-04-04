@@ -1,5 +1,7 @@
 package newbank.server;
 
+import newbank.Database.NewBankDB;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,6 +9,7 @@ import java.net.Socket;
 public class NewBankServer extends Thread{
 	
 	private final ServerSocket server;
+	static NewBankDB newBankDB;
 	
 	public NewBankServer(int port) throws IOException {
 		server = new ServerSocket(port);
@@ -27,6 +30,7 @@ public class NewBankServer extends Thread{
 		finally {
 			try {
 				server.close();
+				newBankDB.closeConnection();
 			} catch (IOException e) {
 				e.printStackTrace();
 				Thread.currentThread().interrupt();
@@ -37,5 +41,7 @@ public class NewBankServer extends Thread{
 	public static void main(String[] args) throws IOException {
 		// starts a new NewBankServer thread on a specified port number
 		new NewBankServer(14002).start();
+
+		newBankDB = new NewBankDB();
 	}
 }

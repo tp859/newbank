@@ -1,6 +1,7 @@
 package newbank.server;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Customer {
 
@@ -8,6 +9,10 @@ public class Customer {
 
 	public Customer() {
 		accounts = new ArrayList<>();
+	}
+
+	public Customer(CustomerID customerID) {
+		accounts = NewBankServer.newBankDB.getAccountsForCustomer(customerID.getKey());
 	}
 
 	public String accountsToString() {
@@ -32,6 +37,15 @@ public class Customer {
 		throw new NullPointerException("No account found with name \"" + name + "\"");
 	}
 
+	public boolean checkAcc(String name) throws NullPointerException {
+		for (Account account : accounts) {
+			if (account.getAccountName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public Account getFirstAccount() throws NullPointerException {
 
 		Account account = accounts.get(0);
@@ -39,6 +53,5 @@ public class Customer {
 			return account;
 
 		throw new NullPointerException("No account found with name \"");
-
 	}
 }

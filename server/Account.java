@@ -4,11 +4,17 @@ public class Account {
 	
 	private final String accountName;
 	private int balance;
-	private Double overdraft;
+	private int overdraft;
 
-	public Account(String accountName, double openingBalance) {
+	public Account(String accountName, double openingBalanceInPounds) {
 		this.accountName = accountName;
-		this.balance = ourCurrency.convertToPennies(Double.toString(openingBalance));
+		this.balance = ourCurrency.convertToPennies(Double.toString(openingBalanceInPounds));
+	}
+
+	public Account(String accountName, int openingBalance, double overdraft) {
+		this.accountName = accountName;
+		this.balance = openingBalance;
+		this.overdraft = (int)overdraft;
 	}
 	
 	public String toString() {
@@ -33,17 +39,21 @@ public class Account {
 		this.balance += sum;
 	}
 
-	public Double getOverdraft(){
+	public int getOverdraft(){
 		return this.overdraft;
 	}
 
-	public void setOverdraft(double amount){
+	public String printOverdraft() {
+		return ourCurrency.printMoney(this.overdraft);
+	}
+
+	public void setOverdraft(int amount){
 		this.overdraft = amount;
 	}
 
-	public boolean approveOverdraft(double amount){
+	public boolean approveOverdraft(int amount){
 		//Checking if the system should allow transaction with 20£ fixed fine
-		return balance + overdraft >= amount + 20;
+		return balance + overdraft >= amount + 2000;
 	}
 
 	public boolean checkBalance(int amount){
