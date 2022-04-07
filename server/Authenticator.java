@@ -35,28 +35,11 @@ public class Authenticator implements IAuthenticator {
         int randomInt = rand.nextInt(100, 999);
         String username = firstname + randomInt;
 
-        while (!checkUsernameUnique(username)) {
+        while (!NewBankServer.newBankDB.checkUniqueUsername(username)) {
             randomInt = rand.nextInt(100, 999);
             username = firstname + randomInt;
         }
 
         return username;
-    }
-
-    private Boolean checkUsernameUnique(String username) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("server/logins.csv"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] login = line.split(",");
-
-                if (login[0].equals(username)) {
-                    return false;
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Cannot access logins database");
-            Thread.currentThread().interrupt();
-        }
-        return true;
     }
 }

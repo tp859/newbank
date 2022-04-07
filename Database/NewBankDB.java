@@ -50,6 +50,24 @@ public class NewBankDB {
                 customerID, password));
     }
 
+    public Boolean checkUniqueUsername(String username) {
+        try {
+            this.statement = connection.createStatement();
+
+            ResultSet results = statement.executeQuery(String.format("SELECT * FROM Logins WHERE CustomerID = '%s'", username));
+
+            while (results.next()) {
+                String user = results.getString("CustomerID");
+                if (user.equals(username)) {
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return true;
+    }
+
     public ArrayList<Account> getAccountsForCustomer(String customerID) {
         try {
 
