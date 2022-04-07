@@ -13,6 +13,7 @@ public class NewBankClientHandler extends Thread{
 	private final BufferedReader in;
 	private final PrintWriter out;
 	
+	
 	public NewBankClientHandler(Socket s) throws IOException {
 		bank = NewBank.getBank();
 		in = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -82,7 +83,7 @@ public class NewBankClientHandler extends Thread{
 		String request = "";
 
 		// Added this for now as while(true) was causing a warning
-		while(!request.equals("END")) {
+		while(!request.equals("EXIT")) {
 			request = in.readLine();
 			System.out.println("Request from " + customer.getKey());
 			String response = bank.processRequest(customer, request);
@@ -132,7 +133,6 @@ public class NewBankClientHandler extends Thread{
 			out.println("Thanks, please re-enter your password to confirm:");
 			passwordConfirmed = in.readLine();
 		}
-		NewBankServer.newBankDB.addLogin(username, password);
 
 		out.println("Thanks, setup complete, logging in...");
 		return new CustomerID(username);
