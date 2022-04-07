@@ -15,7 +15,7 @@ You will also need to add the SQLite dependency to the project module to be able
 To do this:
 
 - Go to File > Project Structure > Modules
-- Click the '+' button
+- Click the '+' button and select '1 JARs or Directories'
 - Select the .JAR file located in the projects root directory
 '\\newbank\sqlite-jdbc-3.36.0.3.JAR'
 
