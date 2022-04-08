@@ -5,14 +5,17 @@ import java.util.List;
 
 public class Customer {
 
-	private final ArrayList<Account> accounts;
+	private ArrayList<Account> accounts;
+	private CustomerID customerID;
 
-	public Customer() {
-		accounts = new ArrayList<>();
-	}
+//	public Customer(CustomerID customerID) {
+//		this.customerID = customerID;
+//		accounts = new ArrayList<>();
+//	}
 
 	public Customer(CustomerID customerID) {
-		accounts = NewBankServer.newBankDB.getAccountsForCustomer(customerID.getKey());
+		this.customerID = customerID;
+		accounts = new ArrayList<>();
 	}
 
 	public String accountsToString() {
@@ -22,6 +25,14 @@ public class Customer {
 		}
 
 		return s.length() != 0 ? s.toString() : "No accounts exist for this user.";
+	}
+
+	public void loadAccounts() {
+		accounts = NewBankServer.newBankDB.getAccountsForCustomer(customerID.getKey());
+	}
+
+	public CustomerID getCustomerID() {
+		return this.customerID;
 	}
 
 	public void addAccount(Account account) {

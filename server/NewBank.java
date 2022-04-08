@@ -16,18 +16,24 @@ public class NewBank {
     }
 
     private void addTestData() {
-        Customer bhagy = new Customer();
-        bhagy.addAccount(new Account("Main", 1000.0));
+
+        CustomerID bhagyID = new CustomerID("Bhagy");
+        Customer bhagy = new Customer(bhagyID);
+        bhagy.loadAccounts();
+        //bhagy.addAccount(new Account(new CustomerID("Bhagy"), "Main", 1000.0));
         customers.put("Bhagy", bhagy);
 
-        Customer christina = new Customer();
-        christina.addAccount(new Account("Savings", 1500.0));
+        CustomerID christinaID = new CustomerID("Christina");
+        Customer christina = new Customer(christinaID);
+        christina.loadAccounts();
+        //christina.addAccount(new Account(new CustomerID("Christina"), "Savings", 1500.0));
         customers.put("Christina", christina);
 
-        Customer john = new Customer();
-        john.addAccount(new Account("Checking", 250.0));
+        CustomerID johnID = new CustomerID("John");
+        Customer john = new Customer(johnID);
+        john.loadAccounts();
+        //john.addAccount(new Account(new CustomerID("John"), "Checking", 250.0));
         customers.put("John", john);
-
 
     }
 
@@ -254,6 +260,7 @@ public class NewBank {
 
     private String showMyAccounts(CustomerID customerID) {
         Customer customer = new Customer(customerID);
+        customer.loadAccounts();
 
         return customer.accountsToString();
     }
@@ -268,7 +275,7 @@ public class NewBank {
             account_names.add("Checking");
             for (String acc : account_names) {
                 if (acc.equals(accountName)) {
-                    customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+                    customers.get(customer.getKey()).addAccount(new Account(customer, accountName, 0.0));
                     return "SUCCESS: New account is created";
                 }
             }

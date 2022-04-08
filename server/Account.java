@@ -1,17 +1,19 @@
 package newbank.server;
 
-public class Account {
+public class Account extends Customer {
 	
 	private final String accountName;
 	private int balance;
 	private int overdraft;
 
-	public Account(String accountName, double openingBalanceInPounds) {
+	public Account(CustomerID customerID, String accountName, double openingBalanceInPounds) {
+		super(customerID);
 		this.accountName = accountName;
 		this.balance = ourCurrency.convertToPennies(Double.toString(openingBalanceInPounds));
 	}
 
-	public Account(String accountName, int openingBalance, double overdraft) {
+	public Account(CustomerID customerID, String accountName, int openingBalance, double overdraft) {
+		super(customerID);
 		this.accountName = accountName;
 		this.balance = openingBalance;
 		this.overdraft = (int)overdraft;
@@ -27,7 +29,7 @@ public class Account {
 	}
 
 	public int getBalance() {
-		return this.balance;
+		return NewBankServer.newBankDB.getCustomerAccountBalance(super.getCustomerID().getKey(), getAccountName());
 	}
 
 	public String printBalance(){
@@ -36,6 +38,8 @@ public class Account {
 
 	// Setters
 	public void changeBalanceBy(int sum) {
+		int newBalance = balance + sum;
+		NewBankServer.newBankDB.updateCustomerAccountBalance(super.getCustomerID().getKey(), getAccountName(), newBalance);
 		this.balance += sum;
 	}
 
