@@ -101,6 +101,23 @@ public class NewBankDB {
         return null;
     }
 
+    public Integer getCustomerAccountOverdraft(String customerID, String accountName) {
+        try {
+
+            this.statement = connection.createStatement();
+            ResultSet results = statement.executeQuery(String.format("SELECT Overdraft FROM Accounts WHERE CustomerID = '%s' AND AccountName = '%s'", customerID, accountName));
+
+            if (results.next()) {
+                return results.getInt("Overdraft");
+            }
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
+    }
+
     public Boolean updateCustomerAccountBalance(String customerID, String accountName, int newBalance){
 
         return updateCustomerAccount(customerID, accountName, newBalance, "Balance");

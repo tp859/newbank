@@ -32,6 +32,10 @@ public class Account extends Customer {
 		return NewBankServer.newBankDB.getCustomerAccountBalance(super.getCustomerID().getKey(), getAccountName());
 	}
 
+	public int getOverdraft(){
+		return NewBankServer.newBankDB.getCustomerAccountOverdraft(super.getCustomerID().getKey(), getAccountName());
+	}
+
 	public String printBalance(){
 		return ourCurrency.printMoney(balance);
 	}
@@ -41,10 +45,6 @@ public class Account extends Customer {
 		int newBalance = balance + sum;
 		NewBankServer.newBankDB.updateCustomerAccountBalance(super.getCustomerID().getKey(), getAccountName(), newBalance);
 		this.balance += sum;
-	}
-
-	public int getOverdraft(){
-		return this.overdraft;
 	}
 
 	public String printOverdraft() {
