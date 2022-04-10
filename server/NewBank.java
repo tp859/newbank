@@ -151,8 +151,8 @@ public class NewBank {
     //Setting up overdraft of up to 1500 £ for individual accounts
     private String setOverdraft(CustomerID customer, String[] splitRequest){
         int overdraft = ourCurrency.convertToPennies(splitRequest[1]);
-        if (overdraft < 0 || overdraft > Overdraft.LIMIT){
-            return ("FAIL: overdraft limit must be between £0 and " + ourCurrency.printMoney(Overdraft.LIMIT));
+        if (overdraft < 0 || overdraft > 150000){
+            return ("FAIL: overdraft limit must be between £0 and £1500");
         }
         if (customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance() < 0){
             return "FAIL: Overdraft increase unavailable for the accounts with negative balance";
@@ -206,7 +206,7 @@ public class NewBank {
         //Enter if overdraft account is set up by the user
         else if (customerAccount.getBalance() < amount && customerAccount.getOverdraft() > 0) {
             if (customerAccount.approveOverdraft(amount)) {
-                customerAccount.changeBalanceBy(-(amount + Overdraft.TRANSACTION_FEE)); // £20/2000p is fixed fine for overdraft transaction
+                customerAccount.changeBalanceBy(-(amount + 2000)); // £20/2000p is fixed fine for overdraft transaction
                 return String.format("SUCCESS: The new balance for Account \"%s\" is %s", account, customerAccount.printBalance());
             }
             return String.format("FAIL: Maximum overdraft for the Account \"%s\" is %s", account, customerAccount.printOverdraft());
