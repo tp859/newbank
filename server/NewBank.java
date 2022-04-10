@@ -284,8 +284,8 @@ public class NewBank {
             return "SUCCESS";
         } else if (from.getBalance() < amount && from.getOverdraft() > 0) {
             if (from.approveOverdraft(amount)) {
-                from.changeBalanceBy(-(amount + 2000));
-                to.changeBalanceBy(amount);; // £20/2000p is fixed fine for overdraft transaction
+                from.changeBalanceBy(-(amount + 2000)); // £20/2000p is fixed fine for overdraft transaction
+                to.changeBalanceBy(amount); 
                 return "SUCCESS";
             }
         }
