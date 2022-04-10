@@ -1,5 +1,7 @@
 package newbank.server;
 
+import newbank.Database.NewBankDB;
+
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,16 +18,22 @@ public class NewBank {
     }
 
     private void addTestData() {
-        Customer bhagy = new Customer();
-        bhagy.addAccount(new Account("Main", 1000.0));
+        CustomerID bhagyID = new CustomerID("Bhagy");
+        Customer bhagy = new Customer(bhagyID);
+        bhagy.loadAccounts();
+        //bhagy.addAccount(new Account(new CustomerID("Bhagy"), "Main", 1000.0));
         customers.put("Bhagy", bhagy);
 
-        Customer christina = new Customer();
-        christina.addAccount(new Account("Savings", 1500.0));
+        CustomerID christinaID = new CustomerID("Christina");
+        Customer christina = new Customer(christinaID);
+        christina.loadAccounts();
+        //christina.addAccount(new Account(new CustomerID("Christina"), "Savings", 1500.0));
         customers.put("Christina", christina);
 
-        Customer john = new Customer();
-        john.addAccount(new Account("Checking", 250.0));
+        CustomerID johnID = new CustomerID("John");
+        Customer john = new Customer(johnID);
+        john.loadAccounts();
+        //john.addAccount(new Account(new CustomerID("John"), "Checking", 250.0));
         customers.put("John", john);
 
 
@@ -132,7 +140,7 @@ public class NewBank {
                         break;
 
                     default:
-                        throw new NullPointerException("No account found with this name");
+                        throw new NullPointerException("Command in incorrect format. Try again.");
                 }
 
                 return result;
@@ -150,13 +158,14 @@ public class NewBank {
         if (overdraft < 0 || overdraft > 150000){
             return ("FAIL: overdraft limit must be between £0 and £1500");
         }
-        if (customers.get(customer.getKey()).findAccount(splitRequest[2]).getBalance() < 0){
+        if (NewBankServer.newBankDB.getCustomerAccountBalance(customer.getKey(), splitRequest[2]) < 0){
             return "FAIL: Overdraft increase unavailable for the accounts with negative balance";
         }
         try {
-            customers.get(customer.getKey()).findAccount(splitRequest[2]).setOverdraft(overdraft);
+            NewBankServer.newBankDB.updateCustomerAccountOverdraft(customer.getKey(), splitRequest[2], overdraft);
             int overdraftBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getOverdraft();
             return "SUCCESS: The new overdraft limit for " + splitRequest[2] + " is " + ourCurrency.printMoney(overdraftBalance);
+
         } catch (NullPointerException e){
             return ("FAIL: No account found with that name.");
         }
@@ -164,10 +173,9 @@ public class NewBank {
 
     private String checkAccountOverdraft(CustomerID customer, String[] splitRequest){
         try{
-            int overdraftAmount = customers.get(customer.getKey()).findAccount(splitRequest[1]).getOverdraft();
-            String overdraftPrint = customers.get(customer.getKey()).findAccount(splitRequest[1]).printOverdraft();
+            int overdraftAmount = NewBankServer.newBankDB.getCustomerAccountOverdraft(customer.getKey(), splitRequest[1]);
             if (overdraftAmount > 0) {
-                return "The available overdraft for " + splitRequest[1] + " is " + overdraftPrint;
+                return "The available overdraft for " + splitRequest[1] + " is " + ourCurrency.printMoney(overdraftAmount);
             }
             else{
                 return "No overdraft set up for the " + splitRequest[1] + " account";
@@ -224,32 +232,64 @@ public class NewBank {
                 fromCustomerAccount.changeBalanceBy(-amount);
                 return String.format("SUCCESS: The new balance for Account \"%s\" is %s", fromCustomerDetails.getFirstAccount().getAccountName(), fromCustomerAccount.printBalance());
             }
+            else if (fromCustomerAccount.getBalance() < amount && fromCustomerAccount.getOverdraft() > 0) {
+                if (fromCustomerAccount.approveOverdraft(amount)) {
+                    fromCustomerAccount.changeBalanceBy(-(amount + 2000));
+                    toCustomerAccount.changeBalanceBy(amount);; // £20/2000p is fixed fine for overdraft transaction
+                    return "SUCCESS";
+                }
+            }
 
             toCustomerAccount.changeBalanceBy(+amount);
             return String.format("SUCCESS: The new balance for Account \"%s\" is %s", toCustomerDetails.getFirstAccount().getBalance(), toCustomerAccount.printBalance());
     }
 
     private String transferAccounts(CustomerID customer, String[] splitRequest) {
+        Account from = null;
+        Account to = null;
         int amount = ourCurrency.convertToPennies(splitRequest[1]);
-        System.out.println(amount);
         if (amount <= 0) {
             return "FAIL: Transferred amount must be a positive number";
         }
-        Account fromAccount = customers.get(customer.getKey()).findAccount(splitRequest[2]);
-        Account toAccount = customers.get(customer.getKey()).findAccount(splitRequest[3]);
-
+        //regarding code below, assigning accounts,
+        //I was not sure how best to call values between Customer class and db, therefore
+        //might seem chunky
+        ArrayList<Account> UserAccounts = NewBankServer.newBankDB.getAccountsForCustomer(customer.getKey());
+        for(Account acc: UserAccounts) {
+            if (acc.getAccountName().equals(splitRequest[2])) {
+                from = acc;
+                break;
+            }
+        }
+        for(Account acc: UserAccounts) {
+            if (acc.getAccountName().equals(splitRequest[3])) {
+                to = acc;
+                break;
+            }
+        }
+        if (from == null){
+            return String.format("FAIL: Account \"%s\" does not exist", splitRequest[2]);
+        }
+        if (to == null){
+            return String.format("FAIL: Account \"%s\" does not exist", splitRequest[3]);
+        }
         //check if the accounts are the same
-        if (fromAccount.equals(toAccount)) {
+        if (from.equals(to)) {
             return "FAIL: accounts are the same.";
         }
 
-        if (fromAccount.checkBalance(amount)) {
-            fromAccount.changeBalanceBy(-amount);
-            toAccount.changeBalanceBy(amount);
+        if (from.checkBalance(amount)) {
+            from.changeBalanceBy(-amount);
+            to.changeBalanceBy(amount);
             return "SUCCESS";
-        } else {
-            return "FAIL: Insufficient funds";
+        } else if (from.getBalance() < amount && from.getOverdraft() > 0) {
+            if (from.approveOverdraft(amount)) {
+                from.changeBalanceBy(-(amount + 2000));
+                to.changeBalanceBy(amount);; // £20/2000p is fixed fine for overdraft transaction
+                return "SUCCESS";
+            }
         }
+        return "FAIL: Insufficient funds";
     }
 
     private String showMyAccounts(CustomerID customerID) {
@@ -268,7 +308,8 @@ public class NewBank {
             account_names.add("Checking");
             for (String acc : account_names) {
                 if (acc.equals(accountName)) {
-                    customers.get(customer.getKey()).addAccount(new Account(accountName, 0.0));
+                    customers.get(customer.getKey()).addAccount(new Account(customer, accountName, 0.0));
+                    NewBankServer.newBankDB.addCustomerAccount(customer.getKey(), customers.get(customer.getKey()).findAccount(accountName));
                     return "SUCCESS: New account is created";
                 }
             }
