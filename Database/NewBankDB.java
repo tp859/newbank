@@ -68,6 +68,21 @@ public class NewBankDB {
         return true;
     }
 
+    public Boolean checkUserExists(String username) {
+        try {
+            this.statement = connection.createStatement();
+
+            ResultSet results = statement.executeQuery(String.format("SELECT * FROM Logins WHERE CustomerID = '%s'", username));
+
+            if (results.next()) {
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return true;
+    }
+
     public ArrayList<Account> getAccountsForCustomer(String customerID) {
         try {
 
