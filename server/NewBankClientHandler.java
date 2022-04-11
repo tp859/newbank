@@ -61,6 +61,7 @@ public class NewBankClientHandler extends Thread{
 				}
 			}
 
+			bank.initialiseCustomer(customer);
 			processInput(customer);
 
 		} catch (IOException e) {

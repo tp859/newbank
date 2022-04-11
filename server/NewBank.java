@@ -3,6 +3,7 @@ package newbank.server;
 import newbank.server.Constants.*;
 
 import newbank.Database.NewBankDB;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,33 +11,10 @@ import java.util.List;
 public class NewBank {
 
     private static final NewBank bank = new NewBank();
-    private final HashMap<String, Customer> customers;
+    private Customer currentCustomer;
     Authenticator authenticator = new Authenticator();
 
     private NewBank() {
-        customers = new HashMap<>();
-        addTestData();
-    }
-
-    private void addTestData() {
-        CustomerID bhagyID = new CustomerID("Bhagy");
-        Customer bhagy = new Customer(bhagyID);
-        bhagy.loadAccounts();
-        //bhagy.addAccount(new Account(new CustomerID("Bhagy"), "Main", 1000.0));
-        customers.put("Bhagy", bhagy);
-
-        CustomerID christinaID = new CustomerID("Christina");
-        Customer christina = new Customer(christinaID);
-        christina.loadAccounts();
-        //christina.addAccount(new Account(new CustomerID("Christina"), "Savings", 1500.0));
-        customers.put("Christina", christina);
-
-        CustomerID johnID = new CustomerID("John");
-        Customer john = new Customer(johnID);
-        john.loadAccounts();
-        //john.addAccount(new Account(new CustomerID("John"), "Checking", 250.0));
-        customers.put("John", john);
-
 
     }
 
@@ -55,6 +33,10 @@ public class NewBank {
         return authenticator.generateUsername(firstname);
     }
 
+    public void initialiseCustomer(CustomerID customerID) {
+        this.currentCustomer = new Customer(customerID);
+        this.currentCustomer.loadAccounts();
+    }
 
     // commands from the NewBank customer are processed in this method
     public synchronized String processRequest(CustomerID customer, String request) {
@@ -77,7 +59,7 @@ public class NewBank {
 
                     case Commands.CREATE_ACCOUNT:
                         if (!ourCurrency.moneyValid(splitRequest[1])) {
-                            result = createNewAccount(customer, splitRequest[1]);
+                            result = createNewAccount(splitRequest[1]);
                         }
                         break;
 
@@ -93,7 +75,7 @@ public class NewBank {
                         // Fomat "PAY <customerID> <amount>
                         if (splitRequest.length == 3) {
                             if (ourCurrency.moneyValid(splitRequest[2])) {
-                                result = payOther(customer, splitRequest);
+                                result = payOther(splitRequest);
                             }
                         }
                         break;
@@ -146,13 +128,13 @@ public class NewBank {
                         throw new NullPointerException("Command in incorrect format. Try again.");
                 }
 
+                // Refresh data after transaction
+                currentCustomer.loadAccounts();
+
                 return result;
-            }
         } catch (Exception e) {
             return (e.getMessage());
         }
-        //The code shouldn't reach here, as users should be set up correctly, but leaving a return here just in case//
-        return ("No account found with this name");
     }
 
     //Setting up overdraft of up to 1500 £ for individual accounts
@@ -166,7 +148,7 @@ public class NewBank {
         }
         try {
             NewBankServer.newBankDB.updateCustomerAccountOverdraft(customer.getKey(), splitRequest[2], overdraft);
-            int overdraftBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).getOverdraft();
+            int overdraftBalance = currentCustomer.findAccount(splitRequest[2]).getOverdraft();
             return "SUCCESS: The new overdraft limit for " + splitRequest[2] + " is " + ourCurrency.printMoney(overdraftBalance);
 
         } catch (NullPointerException e){
@@ -195,14 +177,13 @@ public class NewBank {
             return ("FAIL: Deposit amount must be a positive number");
         }
 
-        customers.get(customer.getKey()).findAccount(splitRequest[2]).changeBalanceBy(deposit);
-        String newBalance = customers.get(customer.getKey()).findAccount(splitRequest[2]).printBalance();
+        currentCustomer.findAccount(splitRequest[2]).changeBalanceBy(deposit);
+        String newBalance = currentCustomer.findAccount(splitRequest[2]).printBalance();
         return "SUCCESS: The new balance for " + splitRequest[2] + " is " + newBalance;
     }
 
     private String withdraw(CustomerID customer, int amount, String account) {
-        Customer customerDetails = customers.get(customer.getKey());
-        Account customerAccount = customerDetails.findAccount(account);
+        Account customerAccount = currentCustomer.findAccount(account);
 
         if (customerAccount.getBalance() >= amount) {
             System.out.println(customerAccount.getBalance());
@@ -221,7 +202,7 @@ public class NewBank {
         return String.format("FAIL: The Account \"%s\" does not have enough balance, and it has no overdraft set up.", account);
     }
 
-    private String payOther(CustomerID fromCustomer, String[] splitRequest) {
+    private String payOther(String[] splitRequest) {
             int amount = ourCurrency.convertToPennies(splitRequest[2]);
             CustomerID toCustomer = new CustomerID(splitRequest[1]);
 
@@ -229,6 +210,7 @@ public class NewBank {
             Account fromCustomerAccount = fromCustomerDetails.getFirstAccount();
 
             Customer toCustomerDetails = new Customer(toCustomer);
+
             Account toCustomerAccount = toCustomerDetails.getFirstAccount();
 
             // Update paying Customer's account
@@ -302,13 +284,11 @@ public class NewBank {
     }
 
     private String showMyAccounts(CustomerID customerID) {
-        Customer customer = new Customer(customerID);
-
-        return customer.accountsToString();
+        return currentCustomer.accountsToString();
     }
 
-    private String createNewAccount(CustomerID customer, String accountName) {
-        if(customers.get(customer.getKey()).checkAcc(accountName)){
+    private String createNewAccount(String accountName) {
+        if(currentCustomer.checkAcc(accountName)){
             return String.format("The account \"%s\" already exists", accountName);
         }else{
             List<String> account_names = new ArrayList<String>();
@@ -317,25 +297,11 @@ public class NewBank {
             account_names.add("Checking");
             for (String acc : account_names) {
                 if (acc.equals(accountName)) {
-                    customers.get(customer.getKey()).addAccount(new Account(customer, accountName, 0.0));
-                    NewBankServer.newBankDB.addCustomerAccount(customer.getKey(), customers.get(customer.getKey()).findAccount(accountName));
+                    currentCustomer.addAccount(new Account(currentCustomer.getCustomerID(), accountName, 0000));
                     return "SUCCESS: New account is created";
                 }
             }
         }
         return "FAIL:Invalid account name";
     }
-
-
-    /*Checks if a given string is a double, and catches exceptions*/
-    private boolean checkDouble(String value) {
-        try {
-            Double.parseDouble(value);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-
 }
