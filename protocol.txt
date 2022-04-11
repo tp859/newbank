@@ -2,6 +2,8 @@ This document details the protocol for interacting with the NewBank server.
 
 A customer enters the command below and sees the messages returned 
 
+*** Default functionality: ***
+
 SHOWMYACCOUNTS
 Returns a list of all the customers accounts along with their current balance 
 e.g. Main: 1000.0 
@@ -19,8 +21,29 @@ e.g. PAY John 100
 Returns SUCCESS or FAIL
 
 
-Added Commands:
+*** Added Commands: ***
 
-WITHDRAW <Amount> <From>
+DEPOSIT <Amount> <AccountName>
+e.g. DEPOSIT 100 Main
+Returns SUCCESS or FAIL
+
+WITHDRAW <Amount> <AccountName>
 e.g. WITHDRAW 100 Savings
 Returns SUCCESS or FAIL
+
+SETOVERDRAFT <Amount> <AccountName>
+e.g. SETOVERDRAFT 1000 Checking
+Returns SUCCESS or FAIL
+
+CHECKOVERDRAFT <AccountName>
+e.g. CHECKOVERDRAFT Main
+Returns the overdraft limit for this account
+
+
+*** Bank Terms and Conditions ***
+1. a) Transactions that will place an account into its overdraft will incur a £20 fee.
+   b) There must be sufficient balance remaining in the overdraft to allow this fee to be charged,
+      otherwise the transaction will be refused.
+2. The maximum overdraft limit per account is £1,500.
+3. a) The bank offers 3 accounts - Checking, Savings and Main.
+   b) Attempts to open up duplicate accounts or accounts with names other than these will be refused.
