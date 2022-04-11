@@ -1,5 +1,6 @@
 package newbank.Database;
 
+import newbank.server.CustomerID;
 import newbank.server.Account;
 
 import java.sql.Connection;
@@ -81,7 +82,8 @@ public class NewBankDB {
                 int balance = results.getInt("Balance");
                 double overdraft = results.getDouble("Overdraft");
 
-                Account account = new Account(accountName, balance, overdraft);
+                CustomerID currentID = new CustomerID(customerID);
+                Account account = new Account(currentID, accountName, balance, overdraft);
 
                 customerAccounts.add(account);
             }
@@ -97,7 +99,41 @@ public class NewBankDB {
     public Boolean addCustomerAccount(String customerID, Account account) {
 
         return execute(String.format("INSERT INTO Accounts (CustomerID, AccountName, Balance) VALUES ('%s', '%s', '%d')",
-                customerID, account.getAccountName(), account.getBalance()));
+                customerID, account.getAccountName(), 0));
+    }
+
+    public Integer getCustomerAccountBalance(String customerID, String accountName) {
+        try {
+
+            this.statement = connection.createStatement();
+            ResultSet results = statement.executeQuery(String.format("SELECT Balance FROM Accounts WHERE CustomerID = '%s' AND AccountName = '%s'", customerID, accountName));
+
+            if (results.next()) {
+                return results.getInt("Balance");
+            }
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
+    }
+
+    public Integer getCustomerAccountOverdraft(String customerID, String accountName) {
+        try {
+
+            this.statement = connection.createStatement();
+            ResultSet results = statement.executeQuery(String.format("SELECT Overdraft FROM Accounts WHERE CustomerID = '%s' AND AccountName = '%s'", customerID, accountName));
+
+            if (results.next()) {
+                return results.getInt("Overdraft");
+            }
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
     }
 
     public Boolean updateCustomerAccountBalance(String customerID, String accountName, int newBalance){
