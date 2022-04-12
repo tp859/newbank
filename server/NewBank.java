@@ -203,7 +203,9 @@ public class NewBank {
     private String payOther(String[] splitRequest) {
         int amount = ourCurrency.convertToPennies(splitRequest[2]);
         CustomerID toCustomer = new CustomerID(splitRequest[1]);
-
+        if (NewBankServer.newBankDB.checkUniqueUsername(toCustomer.getKey())) {
+            return ("FAIL: Recipient not found");
+        }
         Account fromCustomerAccount = currentCustomer.getFirstAccount();
 
         Customer toCustomerDetails = new Customer(toCustomer);
