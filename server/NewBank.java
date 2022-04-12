@@ -206,6 +206,10 @@ public class NewBank {
         if (NewBankServer.newBankDB.checkUniqueUsername(toCustomer.getKey())) {
             return ("FAIL: Recipient not found");
         }
+        if(toCustomer.getKey().equals(currentCustomer.getCustomerID().getKey())){
+            return ("FAIL: Recipient not found");
+        }
+
         Account fromCustomerAccount = currentCustomer.getFirstAccount();
 
         Customer toCustomerDetails = new Customer(toCustomer);
