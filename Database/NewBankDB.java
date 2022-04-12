@@ -86,7 +86,6 @@ public class NewBankDB {
 
     public ArrayList<Account> getAccountsForCustomer(String customerID) {
         try {
-
             this.statement = connection.createStatement();
             ResultSet results = statement.executeQuery(String.format("SELECT * FROM Accounts WHERE CustomerID = '%s'", customerID));
 

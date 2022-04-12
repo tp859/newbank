@@ -23,7 +23,6 @@ public class NewBankServer extends Thread{
 				Socket s = server.accept();
 				NewBankClientHandler clientHandler = new NewBankClientHandler(s);
 				clientHandler.start();
-
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
